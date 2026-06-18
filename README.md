@@ -42,6 +42,20 @@ melodia/
 
 ## Быстрый старт
 
+### Вариант A — всё в Docker (с хот-релоадом)
+
+```bash
+docker compose up            # mongo + backend + frontend
+# фронтенд: http://localhost:5173   бэкенд: http://localhost:8000/docs
+```
+
+Код прокидывается бинд-маунтами (`./backend`, `./frontend`), правки подхватываются
+на лету: бэкенд — `uvicorn --reload`, фронтенд — Vite dev-server (HMR). Зависимости
+(`.venv`, `node_modules`) живут внутри контейнеров и не конфликтуют с хостом.
+После изменения зависимостей: `docker compose up --build`.
+
+### Вариант B — локально
+
 ```bash
 # 1. MongoDB
 docker compose up -d mongo

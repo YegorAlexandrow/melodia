@@ -1,3 +1,11 @@
+# Dev-окружение «Фонотека»: MongoDB + бэкенд + фронтенд.
+# Код прокидывается бинд-маунтами, хот-релоад включён (uvicorn --reload, Vite dev).
+# Зависимости (.venv / node_modules) маскируются анонимными томами, чтобы бинд-маунт
+# хоста не затирал собранное в контейнере.
+#
+#   docker compose up            — поднять всё
+#   фронтенд: http://localhost:5173   бэкенд: http://localhost:8000/docs
+
 services:
   mongo:
     image: mongo:7
@@ -7,6 +15,42 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+    container_name: melodia-backend
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      DB_NAME: vinyl
+      # надёжный хот-релоад в Docker на любом хосте (Linux/macOS/Windows)
+      WATCHFILES_FORCE_POLLING: "true"
+    volumes:
+      - ./backend:/app # прокидывание кода
+      - /app/.venv # не затирать окружение контейнера венвом хоста
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: melodia-frontend
+    restart: unless-stopped
+    command: npm run dev -- --host 0.0.0.0
+    environment:
+      VITE_PROXY_TARGET: http://backend:8000 # прокси /api внутри сети compose
+      VITE_USE_POLLING: "1" # хот-релоад через polling
+    volumes:
+      - ./frontend:/app # прокидывание кода
+      - /app/node_modules # node_modules из образа (musl), не затирать хостом
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
 
 volumes:
   mongo-data:
