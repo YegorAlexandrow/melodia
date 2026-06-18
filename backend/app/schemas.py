@@ -11,10 +11,17 @@ from typing import Any, Optional
 from pydantic import BaseModel
 
 from .models.catalog import (
+    Acquisition,
+    Copy,
+    CopyStatus,
+    Grade,
     Identifier,
     MediaRead,
+    Pressing,
+    RatingEntry,
     Release,
     SoundMode,
+    TimeStamp,
     Track,
     media_to_read,
 )
@@ -107,4 +114,111 @@ class ReleaseRead(BaseModel):
             identifiers=r.identifiers,
             images=[m for m in (media_to_read(im) for im in r.images) if m is not None],
             discogs_uri=r.discogs_uri,
+        )
+
+
+# --------------------------------------------------------------------------- #
+#  Экземпляры (Copy)
+# --------------------------------------------------------------------------- #
+class CopyCreate(BaseModel):
+    """Создание экземпляра(ов) из релиза. count > 1 — «несколько прессов»."""
+
+    discogs_release_id: int
+    count: int = 1
+
+
+class CopyListItem(BaseModel):
+    """Строка коллекции (экран A) — денормализованные поля без джойнов."""
+
+    id: str
+    status: CopyStatus
+    display_title: Optional[str] = None
+    display_artist: Optional[str] = None
+    catalog_number: Optional[str] = None
+    year: Optional[int] = None
+    cover: Optional[MediaRead] = None
+    current_album_rating: Optional[int] = None
+    current_sound_rating: Optional[int] = None
+    is_favorite: bool = False
+    has_audio: bool = False
+    has_notes: bool = False
+    plant_code: Optional[str] = None
+    genres: list[str] = []
+    tags: list[str] = []
+
+    @classmethod
+    def from_doc(cls, c: Copy, *, genres: list[str] | None = None) -> "CopyListItem":
+        return cls(
+            id=str(c.id),
+            status=c.status,
+            display_title=c.display_title,
+            display_artist=c.display_artist,
+            catalog_number=c.catalog_number,
+            year=c.year,
+            cover=media_to_read(c.cover),
+            current_album_rating=c.current_album_rating,
+            current_sound_rating=c.current_sound_rating,
+            is_favorite=c.is_favorite,
+            plant_code=c.pressing.plant_code if c.pressing else None,
+            genres=genres or [],
+            tags=c.tags,
+        )
+
+
+class CopyRead(BaseModel):
+    """Полная карточка экземпляра (экран C) = личный слой + канон релиза."""
+
+    id: str
+    status: CopyStatus
+    display_title: Optional[str] = None
+    display_artist: Optional[str] = None
+    catalog_number: Optional[str] = None
+    year: Optional[int] = None
+    cover: Optional[MediaRead] = None
+    is_favorite: bool = False
+
+    current_album_rating: Optional[int] = None
+    current_sound_rating: Optional[int] = None
+    rating_history: list[RatingEntry] = []
+
+    grade: Optional[Grade] = None
+    pressing: Optional[Pressing] = None
+    acquisition: Optional[Acquisition] = None
+    storage_location: Optional[str] = None
+    tags: list[str] = []
+
+    play_count: int = 0
+    last_played_at: Optional[TimeStamp] = None
+
+    copy_index: int = 1
+    copy_total: int = 1
+
+    release: Optional[ReleaseRead] = None
+
+    @classmethod
+    def from_doc(
+        cls, c: Copy, release: Release | None, index: int, total: int
+    ) -> "CopyRead":
+        return cls(
+            id=str(c.id),
+            status=c.status,
+            display_title=c.display_title,
+            display_artist=c.display_artist,
+            catalog_number=c.catalog_number,
+            year=c.year,
+            cover=media_to_read(c.cover),
+            is_favorite=c.is_favorite,
+            current_album_rating=c.current_album_rating,
+            current_sound_rating=c.current_sound_rating,
+            rating_history=c.rating_history,
+            grade=c.grade,
+            pressing=c.pressing,
+            acquisition=c.acquisition,
+            storage_location=c.storage_location,
+            tags=c.tags,
+            play_count=c.play_count,
+            last_played_at=c.last_played_at,
+            copy_index=index,
+            copy_total=total,
+            release=ReleaseRead.from_doc(release) if release else None,
         )

@@ -1,3 +1,7 @@
+# --- Runtime media (локальное хранилище обложек/аудио) ---
+backend/media/
+media/
+
 # --- Python ---
 __pycache__/
 *.py[cod]
