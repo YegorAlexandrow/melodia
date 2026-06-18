@@ -1,0 +1,151 @@
+@import "./tokens.css";
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  /* Мягкие переходы темы (.35s ease) — без bounce/глянца. */
+  transition:
+    background 0.35s ease,
+    color 0.35s ease;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Надзаголовок (PT Mono, uppercase, letter-spacing) */
+.overline {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+/* --- Шапка-навигация (h:64px, --card, нижняя граница --line) --- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  padding: 0 40px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  transition:
+    background 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.wordmark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 25px;
+  color: var(--ink);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nav-link {
+  padding: 7px 13px;
+  border-radius: 2px;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.nav-link.active {
+  color: var(--ink);
+  background: var(--raise);
+}
+
+.btn-primary {
+  background: var(--red);
+  color: #f3ecdd;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 2px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 7px 13px;
+  font-size: 13px;
+  color: var(--ink);
+  background: transparent;
+  font-family: var(--font-body);
+}
+
+/* --- Контейнер страницы --- */
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 34px 30px 70px;
+}
+
+.page h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 46px;
+  line-height: 1;
+  margin: 6px 0 0;
+  color: var(--ink);
+}
+
+.page .lead {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin-top: 12px;
+  line-height: 1.55;
+}
+
+/* --- Индикатор связи с бэкендом (подвал) --- */
+.health {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 40px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.health .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+
+.health.ok .dot {
+  background: var(--green);
+}
+
+.health.err .dot {
+  background: var(--red);
+}

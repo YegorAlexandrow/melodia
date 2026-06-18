@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&family=PT+Mono&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .app {
+    --paper:#efe7d6; --card:#f6efe0; --raise:#ece2cd; --field:#e7ddc8;
+    --ink:#1c1a17; --ink-soft:#4a4334; --muted:#8a7f66; --faint:#a89c80;
+    --line:#dcd0b6; --hair:#e3d8c0;
+    --blue:#21459a; --red:#9e2f20; --gold:#c79436; --green:#2f6b4d;
+    --shadow:0 6px 26px rgba(40,30,12,.13);
+  }
+  .app.theme-dark {
+    --paper:#15130e; --card:#1e1b14; --raise:#26221a; --field:#221e16;
+    --ink:#ece2cd; --ink-soft:#c8bc9f; --muted:#9a8d72; --faint:#71664f;
+    --line:#352f23; --hair:#2b271e;
+    --blue:#86a5e4; --red:#df8068; --gold:#ddbd60; --green:#79b890;
+    --shadow:0 8px 30px rgba(0,0,0,.5);
+  }
+</style>
+</helmet>
+
+<div class="app {{ themeClass }}" style="min-height:100vh; background:var(--paper); color:var(--ink); font-family:'PT Sans',sans-serif; transition:background .35s ease, color .35s ease;">
+
+  <!-- header -->
+  <div style="position:sticky; top:0; z-index:30; display:flex; align-items:center; justify-content:space-between; padding:0 40px; height:64px; background:var(--card); border-bottom:1px solid var(--line);">
+    <div style="display:flex; align-items:baseline; gap:12px;">
+      <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:25px; color:var(--ink);">Дизайн-система</span>
+      <span style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--red);">Конверт · v1</span>
+    </div>
+    <div onClick="{{ toggleTheme }}" style="display:flex; align-items:center; gap:8px; cursor:pointer; border:1px solid var(--line); border-radius:2px; padding:7px 13px; font-size:13px; color:var(--ink);">{{ themeIcon }} {{ themeLabel }}</div>
+  </div>
+
+  <div style="max-width:1120px; margin:0 auto; padding:40px 40px 90px;">
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--red);">Библиотека компонентов</div>
+    <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:48px; line-height:1; color:var(--ink); margin-top:6px;">Каталог винила «Мелодия»</div>
+    <div style="font-size:15px; color:var(--ink-soft); margin-top:12px; max-width:680px; line-height:1.55;">Токены, типографика и все компоненты во всех состояниях. Цвета заданы CSS-переменными и переключаются вместе с темой — переключите тему в шапке, чтобы увидеть оба набора. Это спецификация для разработчика, а не продакшен-код.</div>
+
+    <!-- ===== COLORS ===== -->
+    <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:30px; color:var(--ink); border-bottom:1.5px solid var(--ink); padding-bottom:10px; margin:48px 0 22px;">01 · Цвет</div>
+
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:12px;">Акценты</div>
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:26px;">
+      <sc-for list="{{ accents }}" as="c" hint-placeholder-count="4">
+        <div style="border:1px solid var(--line); border-radius:3px; overflow:hidden; background:var(--card);">
+          <div style="height:74px; background:{{ c.varv }};"></div>
+          <div style="padding:11px 13px;">
+            <div style="font-size:14px; font-weight:700; color:var(--ink);">{{ c.name }}</div>
+            <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--muted); margin-top:3px;">{{ c.token }}</div>
+            <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-top:4px;">L {{ c.light }} · D {{ c.dark }}</div>
+            <div style="font-size:12px; color:var(--ink-soft); margin-top:6px;">{{ c.use }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:12px;">Поверхности и текст</div>
+    <div style="display:grid; grid-template-columns:repeat(6,1fr); gap:10px;">
+      <sc-for list="{{ neutrals }}" as="c" hint-placeholder-count="10">
+        <div style="border:1px solid var(--line); border-radius:3px; overflow:hidden;">
+          <div style="height:50px; background:{{ c.varv }}; border-bottom:1px solid var(--line);"></div>
+          <div style="padding:8px 9px; background:var(--card);">
+            <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--ink);">{{ c.token }}</div>
+            <div style="font-family:'PT Mono',monospace; font-size:10px; color:var(--faint); margin-top:2px;">{{ c.light }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="font-size:13px; color:var(--ink-soft); margin-top:14px; line-height:1.5; max-width:680px;">Статусные цвета фиксированы (не зависят от темы), чтобы обложки и бейджи сохраняли узнаваемость: <span style="font-family:'PT Mono',monospace; font-size:12px;">owned #2f6b4d · wanted #9e2f20 · lent #c79436 · sold #a89c80</span>.</div>
+
+    <!-- ===== TYPE ===== -->
+    <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:30px; color:var(--ink); border-bottom:1.5px solid var(--ink); padding-bottom:10px; margin:48px 0 22px;">02 · Типографика</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
+      <div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Cormorant Garamond · дисплей</div>
+        <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:46px; line-height:1; color:var(--ink);">По волне моей памяти</div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin:4px 0 16px;">700 · 44–48px · заголовки карточек, h1</div>
+        <div style="font-family:'Cormorant Garamond',serif; font-weight:600; font-size:24px; color:var(--ink);">Пресс и сохранность</div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin:4px 0 16px;">600–700 · 21–24px · секции</div>
+        <div style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:21px; color:var(--red);">Давид Тухманов</div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-top:4px;">italic · 18–21px · артист, акценты</div>
+      </div>
+      <div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">PT Sans · текст · PT Mono · данные</div>
+        <div style="font-size:15px; color:var(--ink-soft); line-height:1.55;">Основной текст интерфейса. Тёплая середина, верх чуть смягчён — типичная Апрелевка 77-го.</div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin:6px 0 18px;">PT Sans · 14–15px · 1.5 · body</div>
+        <div style="font-family:'PT Mono',monospace; font-size:14px; color:var(--ink); background:var(--field); padding:10px 13px; border-radius:2px;">С60 07271 А-2 / 4-1-2</div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin:6px 0 18px;">PT Mono · кат.№, матрица, даты, метки</div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted);">Личное собрание · винил</div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-top:6px;">PT Mono · uppercase · letter-spacing .18em · надзаголовки</div>
+      </div>
+    </div>
+
+    <!-- ===== SPACING ===== -->
+    <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:30px; color:var(--ink); border-bottom:1.5px solid var(--ink); padding-bottom:10px; margin:48px 0 22px;">03 · Отступы · радиусы · тени</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:30px;">
+      <div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Шкала отступов</div>
+        <sc-for list="{{ spaces }}" as="s" hint-placeholder-count="6">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:9px;">
+            <div style="height:14px; background:var(--blue); width:{{ s.w }};"></div>
+            <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--ink-soft);">{{ s.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Радиусы</div>
+        <div style="display:flex; gap:14px; align-items:flex-end;">
+          <div style="text-align:center;"><div style="width:54px; height:54px; background:var(--field); border:1px solid var(--line); border-radius:2px;"></div><div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-top:6px;">2px</div></div>
+          <div style="text-align:center;"><div style="width:54px; height:54px; background:var(--field); border:1px solid var(--line); border-radius:3px;"></div><div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-top:6px;">3px</div></div>
+          <div style="text-align:center;"><div style="width:54px; height:54px; background:var(--field); border:1px solid var(--line); border-radius:50%;"></div><div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-top:6px;">круг</div></div>
+        </div>
+        <div style="font-size:13px; color:var(--ink-soft); margin-top:14px; line-height:1.5;">Радиусы минимальны (2–3px) — печатная, не «глянцевая» эстетика. Круг — только аватары/кнопка play.</div>
+      </div>
+      <div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Тень и линии</div>
+        <div style="width:100%; height:62px; background:var(--card); border-radius:3px; box-shadow:var(--shadow); margin-bottom:14px;"></div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">--shadow · карточки, модалки</div>
+        <div style="height:1px; background:var(--line); margin:16px 0 6px;"></div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">--line · разделители</div>
+        <div style="height:1px; background:var(--hair); margin:10px 0 6px;"></div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">--hair · строки списков</div>
+      </div>
+    </div>
+
+    <!-- ===== COMPONENTS ===== -->
+    <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:30px; color:var(--ink); border-bottom:1.5px solid var(--ink); padding-bottom:10px; margin:48px 0 22px;">04 · Компоненты</div>
+
+    <!-- buttons -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Кнопки</div>
+    <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:center; margin-bottom:34px;">
+      <span style="background:var(--red); color:#f3ecdd; padding:10px 18px; border-radius:2px; font-weight:700; font-size:14px;">Добавить пластинку</span>
+      <span style="background:var(--blue); color:#f3ecdd; padding:10px 18px; border-radius:2px; font-weight:700; font-size:14px;">Сохранить</span>
+      <span style="border:1px solid var(--line); color:var(--ink-soft); padding:10px 18px; border-radius:2px; font-size:14px;">Отмена</span>
+      <span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--blue); border:1px solid var(--line); padding:5px 11px; border-radius:2px;">+ добавить аудио</span>
+      <span style="background:var(--field); color:var(--faint); padding:10px 18px; border-radius:2px; font-weight:700; font-size:14px; opacity:.6;">Создать (disabled)</span>
+      <span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--muted);">primary · secondary · outline · inline · disabled</span>
+    </div>
+
+    <!-- inputs + selects -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Поля ввода и селекты</div>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:34px;">
+      <div style="display:flex; align-items:center; gap:11px; background:var(--card); border:1.5px solid var(--ink); border-radius:2px; padding:12px 15px;"><span style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">Кат. №</span><span style="font-family:'PT Mono',monospace; font-size:15px; color:var(--ink);">С60 07271</span><span style="width:2px; height:16px; background:var(--gold); margin-left:auto;"></span></div>
+      <div style="display:flex; align-items:center; gap:9px; border-bottom:1.5px solid var(--ink); padding:9px 4px;"><span style="color:var(--red);">⌕</span><span style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:17px; color:var(--faint);">поиск по названию…</span></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; background:var(--field); border-radius:2px; padding:11px 15px;"><span style="font-size:14px; color:var(--ink);">Апрелевский ЗГ</span><span style="color:var(--muted);">▾</span></div>
+    </div>
+
+    <!-- status badges -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Бейджи статуса экземпляра</div>
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:34px;">
+      <sc-for list="{{ statuses }}" as="s" hint-placeholder-count="4">
+        <span style="font-size:11px; letter-spacing:.05em; text-transform:uppercase; font-weight:700; padding:5px 11px; border-radius:2px; background:{{ s.bg }}; color:{{ s.fg }};">{{ s.label }}</span>
+      </sc-for>
+    </div>
+
+    <!-- goldmine -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Сохранность Goldmine · раздельно пластинка / конверт</div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
+      <sc-for list="{{ grades }}" as="g" hint-placeholder-count="8">
+        <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:18px; color:{{ g.color }}; border:1px solid var(--line); border-radius:2px; padding:4px 12px; min-width:46px; text-align:center;">{{ g.code }}</span>
+      </sc-for>
+    </div>
+    <div style="display:flex; gap:12px; margin-bottom:34px;">
+      <div style="text-align:center; background:var(--field); padding:12px 18px; border-radius:2px;"><div style="font-family:'PT Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--muted);">пластинка</div><div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:25px; color:var(--green);">NM</div></div>
+      <div style="text-align:center; background:var(--field); padding:12px 18px; border-radius:2px;"><div style="font-family:'PT Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--muted);">конверт</div><div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:25px; color:var(--gold);">VG+</div></div>
+    </div>
+
+    <!-- ratings -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Две оценки · музыка (вкус) и звук (пресс)</div>
+    <div style="display:flex; gap:40px; align-items:flex-start; margin-bottom:34px; flex-wrap:wrap;">
+      <div style="display:flex; gap:34px;">
+        <div><div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">Музыка</div><div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:38px; line-height:1; color:var(--gold);">5<span style="font-size:18px; color:var(--faint);">/5</span></div></div>
+        <div style="width:1px; background:var(--line);"></div>
+        <div><div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">Звук пресса</div><div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:38px; line-height:1; color:var(--blue);">4<span style="font-size:18px; color:var(--faint);">/5</span></div></div>
+      </div>
+      <div style="display:flex; gap:26px;">
+        <div>
+          <div style="font-family:'PT Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--muted); margin-bottom:6px;">компактный вид</div>
+          <span style="font-family:'PT Mono',monospace; font-size:13px; color:var(--gold);">муз 5 · зв 4</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- chips + toggles -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Чипы фильтра и переключатели</div>
+    <div style="display:flex; gap:22px; flex-wrap:wrap; align-items:center; margin-bottom:34px;">
+      <div style="display:flex; gap:16px; align-items:center;">
+        <span style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; color:var(--red); border-bottom:2px solid var(--red); padding-bottom:2px;">Все</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:18px; color:var(--muted);">Эстрада</span>
+        <span style="font-family:'Cormorant Garamond',serif; font-size:18px; color:var(--muted);">Классика</span>
+      </div>
+      <div style="display:flex; gap:2px; background:var(--ink); padding:2px; border-radius:2px;"><span style="padding:7px 13px; font-size:13px; background:var(--paper); color:var(--ink); border-radius:1px;">▦ сетка</span><span style="padding:7px 13px; font-size:13px; color:var(--faint);">≣ список</span></div>
+      <div style="display:flex; gap:2px; background:var(--ink); padding:2px; border-radius:2px;"><span style="padding:6px 12px; font-size:12px; background:var(--paper); color:var(--ink);">десктоп</span><span style="padding:6px 12px; font-size:12px; color:var(--faint);">смартфон</span></div>
+      <span style="border:1px solid var(--line); border-radius:2px; padding:7px 13px; font-size:13px; color:var(--ink);">{{ themeIcon }} тема</span>
+    </div>
+
+    <!-- cover placeholder -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Обложка-плейсхолдер · «конверт» (своя графика, не товарный знак)</div>
+    <div style="display:flex; gap:18px; flex-wrap:wrap; margin-bottom:34px;">
+      <sc-for list="{{ covers }}" as="r" hint-placeholder-count="3">
+        <div style="width:170px;">
+          <div style="aspect-ratio:1; position:relative; overflow:hidden; box-shadow:var(--shadow); background:{{ r.bg }};">
+            <div style="position:absolute; left:14px; right:14px; top:14px; border-top:1px solid {{ r.fg }}; opacity:.35;"></div>
+            <div style="position:absolute; right:-30%; top:50%; transform:translateY(-50%); width:80%; height:80%; border-radius:50%; background:radial-gradient(circle at center, transparent 25%, rgba(0,0,0,.16) 26%, rgba(0,0,0,.16) 28%, transparent 29%);"></div>
+            <div style="position:absolute; left:14px; top:22px; font-family:'PT Mono',monospace; font-size:9px; letter-spacing:.04em; color:{{ r.fg }};">{{ r.cat }}</div>
+            <div style="position:absolute; left:14px; right:14px; bottom:16px;">
+              <div style="font-family:'PT Mono',monospace; font-size:8px; letter-spacing:.16em; text-transform:uppercase; opacity:.85; margin-bottom:5px; color:{{ r.fg }};">{{ r.artist }}</div>
+              <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:19px; line-height:.98; color:{{ r.fg }};">{{ r.title }}</div>
+            </div>
+          </div>
+        </div>
+      </sc-for>
+      <div style="display:flex; align-items:center; font-size:13px; color:var(--ink-soft); max-width:220px; line-height:1.5;">Цвет обложки — данные экземпляра (bg + контрастный fg). Диск-намёк и линия-кант одинаковы.</div>
+    </div>
+
+    <!-- collection card + list row -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Карточка коллекции (сетка) и строка списка</div>
+    <div style="display:grid; grid-template-columns:200px 1fr; gap:24px; margin-bottom:34px; align-items:start;">
+      <div>
+        <div style="aspect-ratio:1; position:relative; overflow:hidden; box-shadow:var(--shadow); background:var(--blue);">
+          <div style="position:absolute; left:16px; right:16px; top:16px; border-top:1px solid #ede4d2; opacity:.35;"></div>
+          <div style="position:absolute; right:-30%; top:50%; transform:translateY(-50%); width:80%; height:80%; border-radius:50%; background:radial-gradient(circle at center, transparent 25%, rgba(0,0,0,.16) 26%, rgba(0,0,0,.16) 28%, transparent 29%);"></div>
+          <div style="position:absolute; left:16px; top:22px; font-family:'PT Mono',monospace; font-size:9px; color:#ede4d2;">С60—07271-2</div>
+          <div style="position:absolute; left:16px; right:16px; bottom:18px;"><div style="font-family:'PT Mono',monospace; font-size:8px; letter-spacing:.16em; text-transform:uppercase; color:#ede4d2; opacity:.85; margin-bottom:5px;">Давид Тухманов</div><div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:21px; line-height:.98; color:#ede4d2;">По волне моей памяти</div></div>
+        </div>
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-top:10px;"><div style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--ink);">По волне моей памяти</div><span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--faint);">1976</span></div>
+        <div style="font-size:13px; color:var(--muted);">Давид Тухманов</div>
+        <div style="display:flex; align-items:center; gap:9px; margin-top:8px;"><span style="font-size:10px; text-transform:uppercase; font-weight:700; padding:3px 8px; border-radius:2px; background:#2f6b4d; color:#eee2cf;">в коллекции</span><span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--gold);">5·4</span><span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-left:auto;">♪ ✎</span></div>
+      </div>
+      <div style="border:1px solid var(--line); border-radius:2px; overflow:hidden; background:var(--card);">
+        <sc-for list="{{ listRows }}" as="r" hint-placeholder-count="3">
+          <div style="display:grid; grid-template-columns:44px 1.6fr 120px 80px 120px; gap:14px; align-items:center; padding:11px 16px; border-bottom:1px solid var(--hair);">
+            <div style="width:44px; height:44px; position:relative; overflow:hidden; background:{{ r.bg }};"><div style="position:absolute; right:-26%; top:50%; transform:translateY(-50%); width:74%; height:74%; border-radius:50%; background:radial-gradient(circle at center, transparent 26%, rgba(0,0,0,.18) 27%, rgba(0,0,0,.18) 30%, transparent 31%);"></div></div>
+            <div><div style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600; color:var(--ink); line-height:1.1;">{{ r.title }}</div><div style="font-size:12px; color:var(--muted);">{{ r.artist }} · {{ r.year }}</div></div>
+            <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--ink-soft);">{{ r.cat }}</span>
+            <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--gold);">{{ r.rating }}</span>
+            <span style="font-size:10px; text-transform:uppercase; font-weight:700; padding:3px 8px; border-radius:2px; background:{{ r.bgS }}; color:{{ r.fgS }}; justify-self:start;">{{ r.status }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <!-- track rows -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Строка трека · обычная / с иконками / развёрнутая</div>
+    <div style="max-width:560px; margin-bottom:34px;">
+      <div style="display:flex; align-items:baseline; gap:13px; padding:8px 0; border-bottom:1px solid var(--hair);"><span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--faint); width:28px;">A1</span><span style="flex:1; font-family:'Cormorant Garamond',serif; font-size:19px; color:var(--ink);">Я мысленно вхожу в ваш кабинет</span><span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--faint);">3:58</span></div>
+      <div style="display:flex; align-items:baseline; gap:13px; padding:8px 0; border-bottom:1px solid var(--hair);"><span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--faint); width:28px;">A2</span><span style="flex:1; font-family:'Cormorant Garamond',serif; font-size:19px; color:var(--ink);">Из вагантов</span><span style="font-size:12px; color:var(--gold);">♪ ✎</span><span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--faint);">4:42</span></div>
+      <div style="padding:10px 0 12px 41px; border-bottom:1px solid var(--hair);"><div style="font-size:13px; color:var(--ink-soft); line-height:1.5;">Хит альбома — есть заметка и оцифровка. Раскрытие даёт прикрепить аудио или заметку к треку.</div><div style="display:flex; gap:10px; margin-top:9px;"><span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--blue); border:1px solid var(--line); padding:4px 9px; border-radius:2px;">+ аудио к треку</span><span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--red); border:1px solid var(--line); padding:4px 9px; border-radius:2px;">+ заметка</span></div></div>
+    </div>
+
+    <!-- section header accordion -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Секционный заголовок-аккордеон · раскрыт / свёрнут</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; max-width:760px; margin-bottom:34px;">
+      <div style="display:flex; align-items:center; gap:10px; border-bottom:1.5px solid var(--ink); padding-bottom:8px;"><span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:23px; color:var(--ink);">Треклист</span><span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">2 стороны · 10 треков</span><span style="margin-left:auto; color:var(--muted);">▾</span></div>
+      <div style="display:flex; align-items:center; gap:8px; padding-bottom:8px;"><span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:21px; color:var(--ink);">Журнал прослушиваний</span><span style="margin-left:auto; color:var(--muted);">▸</span></div>
+    </div>
+
+    <!-- discogs candidate -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Карточка-кандидат Discogs · обычная / выбранная · метки совпадения</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:34px;">
+      <div style="display:flex; gap:16px; padding:16px; border:1.5px solid var(--line); border-radius:2px; background:var(--card);">
+        <div style="flex:none; width:72px; height:72px; position:relative; overflow:hidden; background:var(--blue);"><div style="position:absolute; right:-28%; top:50%; transform:translateY(-50%); width:76%; height:76%; border-radius:50%; background:radial-gradient(circle at center, transparent 26%, rgba(0,0,0,.18) 27%, rgba(0,0,0,.18) 30%, transparent 31%);"></div></div>
+        <div><div style="display:flex; gap:8px; align-items:center;"><span style="font-size:10px; text-transform:uppercase; font-weight:700; padding:2px 7px; border-radius:2px; background:#2f6b4d; color:#eee2cf;">точное</span><span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">С60—07271-2</span></div><div style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--ink); margin-top:5px;">По волне моей памяти</div><div style="font-size:13px; color:var(--muted);">Давид Тухманов</div><div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-top:6px;">1976 · СССР · LP</div></div>
+      </div>
+      <div style="display:flex; gap:16px; padding:16px; border:1.5px solid var(--red); border-radius:2px; background:var(--card);">
+        <div style="flex:none; width:72px; height:72px; position:relative; overflow:hidden; background:var(--red);"><div style="position:absolute; right:-28%; top:50%; transform:translateY(-50%); width:76%; height:76%; border-radius:50%; background:radial-gradient(circle at center, transparent 26%, rgba(0,0,0,.18) 27%, rgba(0,0,0,.18) 30%, transparent 31%);"></div></div>
+        <div><div style="display:flex; gap:8px; align-items:center;"><span style="font-size:10px; text-transform:uppercase; font-weight:700; padding:2px 7px; border-radius:2px; background:#c79436; color:#1c1a17;">версия</span><span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">выбрано ✓</span></div><div style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--ink); margin-top:5px;">По волне моей памяти</div><div style="font-size:13px; color:var(--muted);">переиздание 1981</div><div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-top:6px;">похоже · точное · версия</div></div>
+      </div>
+    </div>
+
+    <!-- audio rows + note + stat + empty -->
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:14px;">Аудио-строка · заметка · стат-карточка · пустое состояние</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
+      <div>
+        <div style="display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--hair);"><div style="width:40px; height:40px; flex:none; border-radius:50%; background:var(--red); color:#f3ecdd; display:flex; align-items:center; justify-content:center;">▶</div><div style="flex:1;"><div style="font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:600; color:var(--ink);">Сторона A — оцифровка</div><div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--muted);">FLAC · 96 kHz / 24 bit</div></div><span style="font-family:'PT Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--green);">needledrop</span></div>
+        <div style="display:flex; align-items:center; gap:14px; padding:12px 0;"><div style="width:40px; height:40px; flex:none; border-radius:50%; background:var(--gold); color:#f3ecdd; display:flex; align-items:center; justify-content:center;">▶</div><div style="flex:1;"><div style="font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:600; color:var(--ink);">Весь диск — референс</div><div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--muted);">YouTube · внешняя ссылка</div></div><span style="font-family:'PT Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--gold);">reference</span></div>
+        <div style="border-left:3px solid var(--gold); padding:2px 0 2px 12px; margin-top:18px;"><div style="display:flex; align-items:baseline; gap:8px;"><span style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600; color:var(--ink);">Про пресс</span><span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">12 апр 2024</span><span style="font-size:11px; color:var(--gold);">★ закреплено</span></div><div style="font-size:14px; color:var(--ink-soft); line-height:1.5; margin-top:3px;">Тёплая середина, верх чуть смягчён — типичная Апрелевка 77-го.</div></div>
+      </div>
+      <div>
+        <div style="display:flex; gap:14px; margin-bottom:18px;">
+          <div style="flex:1; background:var(--card); border:1px solid var(--line); border-radius:2px; padding:16px;"><div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:36px; line-height:1; color:var(--green);">7</div><div style="font-size:13px; color:var(--muted);">в коллекции</div></div>
+          <div style="flex:1; background:var(--card); border:1px solid var(--line); border-radius:2px; padding:16px;"><div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:36px; line-height:1; color:var(--blue);">4</div><div style="font-size:13px; color:var(--muted);">с оцифровкой</div></div>
+        </div>
+        <div style="margin-bottom:8px;"><div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px;"><span style="color:var(--ink);">Апрелевский ЗГ</span><span style="font-family:'PT Mono',monospace; color:var(--muted);">3</span></div><div style="height:9px; background:var(--field); border-radius:1px; overflow:hidden;"><div style="height:100%; width:100%; background:var(--blue);"></div></div></div>
+        <div style="border:1.5px dashed var(--line); border-radius:3px; padding:22px; text-align:center; background:var(--card); margin-top:18px;"><div style="font-size:26px; color:var(--faint);">♪</div><div style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:18px; color:var(--muted); margin-top:6px;">Оцифровок пока нет</div><div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-top:3px;">пустое состояние</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1120, &quot;height&quot;: 900}}">
+class Component extends DCLogic {
+  state = { theme: '' };
+  toggleTheme() { this.setState(s => ({ theme: s.theme ? '' : 'theme-dark' })); }
+  renderVals() {
+    const st = this.state;
+    const accents = [
+      { name: 'Синий', token: '--blue', varv: 'var(--blue)', light: '#21459a', dark: '#86a5e4', use: 'структура, ссылки, звук-оценка' },
+      { name: 'Красный', token: '--red', varv: 'var(--red)', light: '#9e2f20', dark: '#df8068', use: 'главное действие, акценты' },
+      { name: 'Золото', token: '--gold', varv: 'var(--gold)', light: '#c79436', dark: '#ddbd60', use: 'избранное, муз-оценка, закреп' },
+      { name: 'Зелёный', token: '--green', varv: 'var(--green)', light: '#2f6b4d', dark: '#79b890', use: 'статус «в коллекции», NM' },
+    ];
+    const neutrals = [
+      { token: '--paper', varv: 'var(--paper)', light: '#efe7d6' },
+      { token: '--card', varv: 'var(--card)', light: '#f6efe0' },
+      { token: '--raise', varv: 'var(--raise)', light: '#ece2cd' },
+      { token: '--field', varv: 'var(--field)', light: '#e7ddc8' },
+      { token: '--line', varv: 'var(--line)', light: '#dcd0b6' },
+      { token: '--hair', varv: 'var(--hair)', light: '#e3d8c0' },
+      { token: '--ink', varv: 'var(--ink)', light: '#1c1a17' },
+      { token: '--ink-soft', varv: 'var(--ink-soft)', light: '#4a4334' },
+      { token: '--muted', varv: 'var(--muted)', light: '#8a7f66' },
+      { token: '--faint', varv: 'var(--faint)', light: '#a89c80' },
+    ];
+    const spaces = [
+      { label: '4', w: '4px' }, { label: '8', w: '8px' }, { label: '14', w: '14px' },
+      { label: '22', w: '22px' }, { label: '30', w: '30px' }, { label: '48', w: '48px' },
+    ];
+    const statuses = [
+      { label: 'в коллекции', bg: '#2f6b4d', fg: '#eee2cf' },
+      { label: 'в розыске', bg: '#9e2f20', fg: '#eee2cf' },
+      { label: 'отдал', bg: '#c79436', fg: '#1c1a17' },
+      { label: 'продан', bg: '#a89c80', fg: '#26221a' },
+    ];
+    const grades = [
+      { code: 'M', color: 'var(--green)' }, { code: 'NM', color: 'var(--green)' },
+      { code: 'VG+', color: 'var(--gold)' }, { code: 'VG', color: 'var(--gold)' },
+      { code: 'G+', color: 'var(--red)' }, { code: 'G', color: 'var(--red)' },
+      { code: 'F', color: 'var(--faint)' }, { code: 'P', color: 'var(--faint)' },
+    ];
+    const covers = [
+      { artist: 'Эдуард Артемьев', title: 'Метаморфозы', cat: 'С60—14127-8', bg: '#1c1a17', fg: '#d8b65a' },
+      { artist: 'ВИА «Песняры»', title: 'Песняры II', cat: 'С60—05011-2', bg: '#9e2f20', fg: '#eee2cf' },
+      { artist: 'Святослав Рихтер', title: 'Шопен · Этюды', cat: 'СМ—02845-6', bg: '#e3d9c0', fg: '#21459a' },
+    ];
+    const listRows = [
+      { title: 'По волне моей памяти', artist: 'Давид Тухманов', year: 1976, cat: 'С60—07271-2', rating: '5·4', bg: '#21459a', status: 'в коллекции', bgS: '#2f6b4d', fgS: '#eee2cf' },
+      { title: 'Трава у дома', artist: 'ВИА «Земляне»', year: 1983, cat: 'С62—19371-2', rating: '—', bg: '#3a3f8a', status: 'в розыске', bgS: '#9e2f20', fgS: '#eee2cf' },
+      { title: 'Поёт Муслим Магомаев', artist: 'М. Магомаев', year: 1969, cat: 'Д—025417-8', rating: '4·4', bg: '#7d4a86', status: 'отдал', bgS: '#c79436', fgS: '#1c1a17' },
+    ];
+    return {
+      themeClass: st.theme, themeIcon: st.theme ? '☀' : '☾',
+      themeLabel: st.theme ? 'светлая' : 'тёмная',
+      toggleTheme: () => this.toggleTheme(),
+      accents, neutrals, spaces, statuses, grades, covers, listRows,
+    };
+  }
+}
+</script>
+</body>
+</html>

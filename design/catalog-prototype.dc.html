@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&family=PT+Mono&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  .app {
+    --paper:#efe7d6; --card:#f6efe0; --raise:#ece2cd; --field:#e7ddc8;
+    --ink:#1c1a17; --ink-soft:#4a4334; --muted:#8a7f66; --faint:#a89c80;
+    --line:#dcd0b6; --hair:#e3d8c0;
+    --blue:#21459a; --red:#9e2f20; --gold:#c79436; --green:#2f6b4d;
+    --shadow:0 6px 26px rgba(40,30,12,.13);
+  }
+  .app.theme-dark {
+    --paper:#15130e; --card:#1e1b14; --raise:#26221a; --field:#221e16;
+    --ink:#ece2cd; --ink-soft:#c8bc9f; --muted:#9a8d72; --faint:#71664f;
+    --line:#352f23; --hair:#2b271e;
+    --blue:#86a5e4; --red:#df8068; --gold:#ddbd60; --green:#79b890;
+    --shadow:0 8px 30px rgba(0,0,0,.5);
+  }
+  ::selection { background: var(--gold); color: #1c1a17; }
+</style>
+</helmet>
+
+<div class="app {{ themeClass }}" style="min-height:100vh; background:var(--paper); color:var(--ink); font-family:'PT Sans',sans-serif; transition:background .35s ease, color .35s ease;">
+
+  <!-- ============ TOP BAR ============ -->
+  <div style="position:sticky; top:0; z-index:50; display:flex; align-items:center; gap:26px; padding:0 30px; height:62px; background:var(--card); border-bottom:1px solid var(--line); transition:background .35s ease;">
+    <div onClick="{{ goHome }}" style="display:flex; align-items:baseline; gap:9px; cursor:pointer;">
+      <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:26px; line-height:1; color:var(--ink);">Фонотека</span>
+      <span style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--red);">винил</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:4px; margin-left:8px;">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+        <div onClick="{{ n.go }}" style="font-size:14px; padding:8px 14px; cursor:pointer; border-radius:2px; color:{{ n.color }}; background:{{ n.bg }}; font-weight:{{ n.weight }}; transition:color .2s;" style-hover="background:var(--raise);">{{ n.label }}</div>
+      </sc-for>
+    </div>
+    <div style="margin-left:auto; display:flex; align-items:center; gap:14px;">
+      <div onClick="{{ goAdd }}" style="display:flex; align-items:center; gap:8px; cursor:pointer; background:var(--red); color:#f3ecdd; padding:9px 16px; border-radius:2px; font-size:14px; font-weight:700;"><span style="font-size:16px; line-height:1;">+</span> Добавить пластинку</div>
+      <div onClick="{{ toggleTheme }}" title="Тема" style="display:flex; align-items:center; justify-content:center; width:38px; height:38px; cursor:pointer; border:1px solid var(--line); border-radius:2px; color:var(--ink); font-size:16px;">{{ themeIcon }}</div>
+    </div>
+  </div>
+
+  <!-- ============ A · COLLECTION ============ -->
+  <sc-if value="{{ isCollection }}" hint-placeholder-val="{{ true }}">
+  <div style="max-width:1280px; margin:0 auto; padding:34px 30px 70px;">
+    <div style="display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:18px; margin-bottom:22px;">
+      <div>
+        <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--red);">Личное собрание</div>
+        <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:46px; line-height:1; color:var(--ink); margin-top:5px;">Коллекция</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:14px;">
+        <div style="display:flex; align-items:center; gap:9px; border-bottom:1.5px solid var(--ink); padding:7px 4px; min-width:300px;">
+          <span style="color:var(--red); font-size:15px;">⌕</span>
+          <span style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:18px; color:var(--faint);">каталожный № или название…</span>
+        </div>
+        <div style="display:flex; gap:2px; background:var(--ink); padding:2px; border-radius:2px;">
+          <div onClick="{{ viewGrid }}" style="padding:7px 13px; font-size:13px; cursor:pointer; border-radius:1px; background:{{ gridBg }}; color:{{ gridFg }};">▦ сетка</div>
+          <div onClick="{{ viewList }}" style="padding:7px 13px; font-size:13px; cursor:pointer; border-radius:1px; background:{{ listBg }}; color:{{ listFg }};">≣ список</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- filter row -->
+    <div style="display:flex; align-items:center; gap:18px; padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:24px; flex-wrap:wrap;">
+      <sc-for list="{{ filterChips }}" as="f" hint-placeholder-count="6">
+        <span onClick="{{ f.pick }}" style="font-size:15px; cursor:pointer; color:{{ f.color }}; border-bottom:{{ f.border }}; padding-bottom:3px; font-family:'Cormorant Garamond',serif; font-weight:{{ f.weight }};">{{ f.label }}</span>
+      </sc-for>
+      <span style="margin-left:auto; font-family:'PT Mono',monospace; font-size:12px; color:var(--faint);">{{ shownCount }} · по году ↓</span>
+    </div>
+
+    <!-- GRID -->
+    <sc-if value="{{ isGrid }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:28px 26px;">
+      <sc-for list="{{ shownRecords }}" as="r" hint-placeholder-count="8">
+        <div onClick="{{ r.open }}" style="cursor:pointer;">
+          <div style="aspect-ratio:1; position:relative; overflow:hidden; box-shadow:var(--shadow); background:{{ r.bg }};">
+            <div style="position:absolute; left:16px; right:16px; top:16px; border-top:1px solid {{ r.fg }}; opacity:.35;"></div>
+            <div style="position:absolute; right:-30%; top:50%; transform:translateY(-50%); width:80%; height:80%; border-radius:50%; background:radial-gradient(circle at center, transparent 25%, rgba(0,0,0,.16) 26%, rgba(0,0,0,.16) 28%, transparent 29%);"></div>
+            <div style="position:absolute; left:16px; top:24px; font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.04em; color:{{ r.fg }};">{{ r.cat }}</div>
+            <div style="position:absolute; left:16px; right:16px; bottom:20px;">
+              <div style="font-family:'PT Mono',monospace; font-size:9px; letter-spacing:.16em; text-transform:uppercase; opacity:.85; margin-bottom:6px; color:{{ r.fg }};">{{ r.artist }}</div>
+              <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:23px; line-height:.98; color:{{ r.fg }};">{{ r.title }}</div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:baseline; justify-content:space-between; margin-top:11px;">
+            <div style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--ink); line-height:1.05;">{{ r.title }}</div>
+            <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--faint); flex:none; margin-left:8px;">{{ r.year }}</span>
+          </div>
+          <div style="font-size:13px; color:var(--muted); margin-top:1px;">{{ r.artist }}</div>
+          <div style="display:flex; align-items:center; gap:9px; margin-top:9px;">
+            <span style="font-size:10px; letter-spacing:.04em; text-transform:uppercase; font-weight:700; padding:3px 8px; border-radius:2px; background:{{ r.statusBg }}; color:{{ r.statusFg }};">{{ r.statusLabel }}</span>
+            <span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--gold);">{{ r.ratingTxt }}</span>
+            <span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-left:auto;">{{ r.ind }}</span>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+
+    <!-- LIST -->
+    <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+    <div style="border:1px solid var(--line); border-radius:2px; overflow:hidden; background:var(--card);">
+      <div style="display:grid; grid-template-columns:44px 1.6fr 130px 110px 90px 130px; gap:14px; padding:10px 20px; border-bottom:1px solid var(--line); font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">
+        <span></span><span>Артист · Название</span><span>Каталог №</span><span>Завод</span><span>Оценки</span><span>Статус</span>
+      </div>
+      <sc-for list="{{ shownRecords }}" as="r" hint-placeholder-count="8">
+        <div onClick="{{ r.open }}" style="display:grid; grid-template-columns:44px 1.6fr 130px 110px 90px 130px; gap:14px; align-items:center; padding:11px 20px; border-bottom:1px solid var(--hair); cursor:pointer;" style-hover="background:var(--raise);">
+          <div style="width:44px; height:44px; position:relative; overflow:hidden; background:{{ r.bg }};">
+            <div style="position:absolute; right:-26%; top:50%; transform:translateY(-50%); width:74%; height:74%; border-radius:50%; background:radial-gradient(circle at center, transparent 26%, rgba(0,0,0,.18) 27%, rgba(0,0,0,.18) 30%, transparent 31%);"></div>
+          </div>
+          <div style="min-width:0;">
+            <div style="font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:600; color:var(--ink); line-height:1.1;">{{ r.title }}</div>
+            <div style="font-size:13px; color:var(--muted);">{{ r.artist }} · {{ r.year }} · {{ r.ind2 }}</div>
+          </div>
+          <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--ink-soft);">{{ r.cat }}</span>
+          <span style="font-size:13px; color:var(--ink-soft);">{{ r.plant }}</span>
+          <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--gold);">{{ r.ratingTxt }}</span>
+          <span style="font-size:10px; letter-spacing:.04em; text-transform:uppercase; font-weight:700; padding:3px 8px; border-radius:2px; background:{{ r.statusBg }}; color:{{ r.statusFg }}; justify-self:start;">{{ r.statusLabel }}</span>
+        </div>
+      </sc-for>
+    </div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <!-- ============ B · ADD ============ -->
+  <sc-if value="{{ isAdd }}" hint-placeholder-val="{{ true }}">
+  <div style="max-width:1080px; margin:0 auto; padding:34px 30px 70px;">
+    <div onClick="{{ goHome }}" style="font-family:'PT Mono',monospace; font-size:12px; color:var(--muted); cursor:pointer; margin-bottom:16px;">← коллекция</div>
+    <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:42px; line-height:1; color:var(--ink);">Добавить пластинку</div>
+    <div style="font-size:15px; color:var(--ink-soft); margin-top:8px; max-width:620px; line-height:1.5;">Введите каталожный номер — данные релиза подтянутся из Discogs. Личный слой (экземпляр, оценки, аудио, заметки) создаётся отдельно и не теряется при повторной загрузке.</div>
+
+    <div style="display:flex; gap:14px; margin:26px 0 8px; flex-wrap:wrap;">
+      <div style="flex:1; min-width:280px; display:flex; align-items:center; gap:12px; background:var(--card); border:1.5px solid var(--ink); border-radius:2px; padding:14px 18px;">
+        <span style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">Кат. №</span>
+        <span style="font-family:'PT Mono',monospace; font-size:17px; color:var(--ink);">С60 07271</span>
+        <span style="width:2px; height:18px; background:var(--gold); margin-left:2px;"></span>
+      </div>
+      <div style="display:flex; align-items:center; padding:0 22px; background:var(--blue); color:#f3ecdd; border-radius:2px; font-weight:700; font-size:15px; cursor:pointer;">Искать</div>
+    </div>
+    <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">нормализовано: <span style="color:var(--ink-soft);">с60072712</span> · или <span style="color:var(--ink-soft); text-decoration:underline; cursor:pointer;">найти по артисту + названию</span></div>
+
+    <div style="display:flex; align-items:center; gap:12px; margin:30px 0 16px;">
+      <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:22px; color:var(--ink);">Результаты Discogs</span>
+      <div style="flex:1; height:1px; background:var(--line);"></div>
+      <span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">4 совпадения · лимит 58/60</span>
+    </div>
+
+    <div style="display:grid; gap:14px; grid-template-columns:1fr 1fr;">
+      <sc-for list="{{ candidates }}" as="c" hint-placeholder-count="4">
+        <div onClick="{{ c.pick }}" style="display:flex; gap:16px; padding:16px; border:1.5px solid {{ c.border }}; border-radius:2px; background:var(--card); cursor:pointer; transition:border-color .2s;">
+          <div style="flex:none; width:82px; height:82px; position:relative; overflow:hidden; background:{{ c.bg }};">
+            <div style="position:absolute; right:-28%; top:50%; transform:translateY(-50%); width:76%; height:76%; border-radius:50%; background:radial-gradient(circle at center, transparent 26%, rgba(0,0,0,.18) 27%, rgba(0,0,0,.18) 30%, transparent 31%);"></div>
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:10px; letter-spacing:.04em; text-transform:uppercase; font-weight:700; padding:2px 7px; border-radius:2px; background:{{ c.matchBg }}; color:{{ c.matchFg }};">{{ c.match }}</span>
+              <span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">{{ c.cat }}</span>
+            </div>
+            <div style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; color:var(--ink); line-height:1.1; margin-top:5px;">{{ c.title }}</div>
+            <div style="font-size:13px; color:var(--muted);">{{ c.artist }}</div>
+            <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-top:6px;">{{ c.meta }}</div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- confirm preview -->
+    <sc-if value="{{ hasCand }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-top:26px; border:1.5px solid var(--ink); border-radius:2px; background:var(--card); overflow:hidden;">
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 22px; background:var(--raise); border-bottom:1px solid var(--line);">
+        <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:22px; color:var(--ink);">Будет создан экземпляр</span>
+        <span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--muted);">{{ candPick.cat }}</span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px; padding:22px;">
+        <div>
+          <div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">Предпросмотр треклиста</div>
+          <sc-for list="{{ candPick.sides }}" as="s" hint-placeholder-count="2">
+            <div style="margin-bottom:10px;">
+              <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--red); margin-bottom:3px;">Сторона {{ s.side }}</div>
+              <sc-for list="{{ s.tracks }}" as="t" hint-placeholder-count="4">
+                <div style="display:flex; gap:10px; font-size:14px; color:var(--ink-soft); padding:2px 0;"><span style="font-family:'PT Mono',monospace; color:var(--faint); width:26px;">{{ t.pos }}</span><span>{{ t.title }}</span></div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+        <div>
+          <div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">Подтянутые данные</div>
+          <div style="font-size:14px; line-height:1.9; color:var(--ink-soft);">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Артист</span><span style="color:var(--ink);">{{ candPick.artist }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Год · страна</span><span style="color:var(--ink);">{{ candPick.ys }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Формат</span><span style="color:var(--ink);">{{ candPick.fmt }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Матрица</span><span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--ink);">{{ candPick.matrix }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Обложка</span><span style="color:var(--green);">кэшируется локально ✓</span></div>
+          </div>
+          <label style="display:flex; align-items:center; gap:10px; margin-top:16px; font-size:14px; color:var(--ink-soft); cursor:pointer;">
+            <span style="width:18px; height:18px; border:1.5px solid var(--ink); border-radius:2px; display:inline-block;"></span>
+            У меня несколько прессов этого издания
+          </label>
+          <div style="display:flex; gap:12px; margin-top:18px;">
+            <div onClick="{{ createCopy }}" style="background:var(--red); color:#f3ecdd; padding:11px 20px; border-radius:2px; font-weight:700; font-size:14px; cursor:pointer;">Создать карточку</div>
+            <div onClick="{{ clearCand }}" style="padding:11px 18px; border:1px solid var(--line); border-radius:2px; font-size:14px; color:var(--ink-soft); cursor:pointer;">Отмена</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <!-- ============ C · RECORD CARD ============ -->
+  <sc-if value="{{ isCard }}" hint-placeholder-val="{{ false }}">
+  <div style="max-width:1180px; margin:0 auto; padding:26px 30px 70px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+      <div onClick="{{ goHome }}" style="font-family:'PT Mono',monospace; font-size:12px; color:var(--muted); cursor:pointer;">← коллекция</div>
+      <div style="display:flex; gap:2px; background:var(--ink); padding:2px; border-radius:2px;">
+        <div onClick="{{ deskOn }}" style="padding:6px 12px; font-size:12px; cursor:pointer; border-radius:1px; background:{{ deskBg }}; color:{{ deskFg }};">десктоп</div>
+        <div onClick="{{ mobOn }}" style="padding:6px 12px; font-size:12px; cursor:pointer; border-radius:1px; background:{{ mobBg }}; color:{{ mobFg }};">смартфон</div>
+      </div>
+    </div>
+
+    <div style="margin:0 auto; max-width:{{ cardW }}; border:{{ cardBorder }}; border-radius:{{ cardRadius }}; overflow:hidden; box-shadow:var(--shadow); background:var(--card); transition:max-width .35s ease;">
+      <!-- header band -->
+      <div style="display:flex; flex-direction:{{ headDir }}; min-height:280px;">
+        <div style="flex:none; width:{{ coverW }}; aspect-ratio:{{ coverAR }}; position:relative; background:{{ d.bg }};">
+          <div style="position:absolute; right:-26%; bottom:-18%; width:78%; height:78%; border-radius:50%; background:radial-gradient(circle at center, transparent 26%, rgba(0,0,0,.2) 27%, rgba(0,0,0,.2) 30%, transparent 31%); opacity:.75;"></div>
+          <div style="position:absolute; left:22px; right:22px; top:22px; border-top:1px solid {{ d.fg }}; opacity:.35;"></div>
+          <div style="position:absolute; left:22px; top:30px; font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.05em; color:{{ d.fg }};">{{ d.cat }}</div>
+          <div style="position:absolute; left:22px; right:22px; bottom:26px;">
+            <div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:{{ d.fg }}; opacity:.85; margin-bottom:8px;">{{ d.artist }}</div>
+            <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:32px; line-height:.96; color:{{ d.fg }};">{{ d.title }}</div>
+          </div>
+        </div>
+        <div style="flex:1; padding:28px 30px; background:var(--raise); min-width:0;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:11px; letter-spacing:.06em; text-transform:uppercase; font-weight:700; padding:4px 10px; border-radius:2px; background:{{ d.statusBg }}; color:{{ d.statusFg }};">{{ d.statusLabel }}</span>
+              <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--muted);">{{ d.copies }}</span>
+            </div>
+            <span onClick="{{ toggleFav }}" style="font-size:24px; cursor:pointer; line-height:1; color:{{ favColor }};">{{ favIcon }}</span>
+          </div>
+          <div style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:21px; color:var(--red); margin-top:18px;">{{ d.artist }}</div>
+          <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:44px; line-height:1; color:var(--ink); margin:2px 0 16px;">{{ d.title }}</div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap; font-size:13px; color:var(--ink-soft);">
+            <span style="border:1px solid var(--line); padding:5px 11px; border-radius:2px;">{{ d.year }}</span>
+            <span style="border:1px solid var(--line); padding:5px 11px; border-radius:2px;">Мелодия</span>
+            <span style="border:1px solid var(--line); padding:5px 11px; border-radius:2px;">{{ d.mode }}</span>
+            <span style="border:1px solid var(--line); padding:5px 11px; border-radius:2px;">{{ d.genre }}</span>
+          </div>
+          <div style="display:flex; gap:36px; margin-top:22px;">
+            <div>
+              <div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">Музыка</div>
+              <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:38px; line-height:1; color:var(--gold);">{{ d.albumTxt }}<span style="font-size:18px; color:var(--faint);">/5</span></div>
+            </div>
+            <div style="width:1px; background:var(--line);"></div>
+            <div>
+              <div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">Звук пресса</div>
+              <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:38px; line-height:1; color:var(--blue);">{{ d.soundTxt }}<span style="font-size:18px; color:var(--faint);">/5</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- body -->
+      <div style="display:grid; grid-template-columns:{{ bodyCols }}; gap:30px; padding:28px 30px;">
+        <!-- LEFT -->
+        <div>
+          <!-- tracklist -->
+          <div onClick="{{ secTracksT }}" style="display:flex; align-items:center; gap:10px; border-bottom:1.5px solid var(--ink); padding-bottom:8px; margin-bottom:14px; cursor:pointer;">
+            <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:23px; color:var(--ink);">Треклист</span>
+            <span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">{{ d.trackMeta }}</span>
+            <span style="margin-left:auto; color:var(--muted); font-size:13px;">{{ secTracksI }}</span>
+          </div>
+          <sc-if value="{{ secTracks }}" hint-placeholder-val="{{ true }}">
+          <sc-for list="{{ sidesView }}" as="s" hint-placeholder-count="2">
+            <div style="margin-bottom:16px;">
+              <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--red); margin-bottom:6px;">Сторона {{ s.side }}</div>
+              <sc-for list="{{ s.tracks }}" as="t" hint-placeholder-count="5">
+                <div>
+                  <div onClick="{{ t.toggle }}" style="display:flex; align-items:baseline; gap:13px; padding:8px 0; border-bottom:1px solid var(--hair); cursor:pointer;">
+                    <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--faint); width:28px; flex:none;">{{ t.pos }}</span>
+                    <span style="flex:1; font-family:'Cormorant Garamond',serif; font-size:19px; color:var(--ink); line-height:1.2;">{{ t.title }}</span>
+                    <span style="font-size:12px; color:var(--gold);">{{ t.icons }}</span>
+                    <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--faint); flex:none;">{{ t.dur }}</span>
+                  </div>
+                  <sc-if value="{{ t.open }}" hint-placeholder-val="{{ false }}">
+                  <div style="padding:10px 0 12px 41px; border-bottom:1px solid var(--hair);">
+                    <div style="font-size:13px; color:var(--ink-soft); line-height:1.5;">{{ t.detail }}</div>
+                    <div style="display:flex; gap:10px; margin-top:9px;">
+                      <span onClick="{{ goAudio }}" style="font-family:'PT Mono',monospace; font-size:11px; color:var(--blue); cursor:pointer; border:1px solid var(--line); padding:4px 9px; border-radius:2px;">+ аудио к треку</span>
+                      <span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--red); cursor:pointer; border:1px solid var(--line); padding:4px 9px; border-radius:2px;">+ заметка</span>
+                    </div>
+                  </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+          </sc-if>
+
+          <!-- audio -->
+          <div onClick="{{ secAudioT }}" style="display:flex; align-items:center; gap:10px; border-bottom:1.5px solid var(--ink); padding-bottom:8px; margin:26px 0 14px; cursor:pointer;">
+            <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:23px; color:var(--ink);">Аудио</span>
+            <span onClick="{{ goAudio }}" style="font-family:'PT Mono',monospace; font-size:11px; color:var(--blue); border:1px solid var(--line); padding:3px 9px; border-radius:2px;">+ добавить</span>
+            <span style="margin-left:auto; color:var(--muted); font-size:13px;">{{ secAudioI }}</span>
+          </div>
+          <sc-if value="{{ secAudio }}" hint-placeholder-val="{{ true }}">
+          <sc-for list="{{ d.audioList }}" as="a" hint-placeholder-count="2">
+            <div style="display:flex; align-items:center; gap:14px; padding:12px 0; border-bottom:1px solid var(--hair);">
+              <div style="width:40px; height:40px; flex:none; border-radius:50%; background:{{ a.dotBg }}; color:#f3ecdd; display:flex; align-items:center; justify-content:center; font-size:14px;">▶</div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:600; color:var(--ink);">{{ a.kind }}</div>
+                <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--muted);">{{ a.meta }}</div>
+              </div>
+              <span style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:{{ a.tagColor }}; flex:none;">{{ a.tag }}</span>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noAudio }}" hint-placeholder-val="{{ false }}">
+            <div style="font-size:14px; color:var(--faint); font-style:italic; font-family:'Cormorant Garamond',serif; font-size:17px; padding:6px 0;">Оцифровок пока нет. Привяжите свой needledrop или внешний референс.</div>
+          </sc-if>
+          </sc-if>
+
+          <!-- ratings history -->
+          <div onClick="{{ secRatingsT }}" style="display:flex; align-items:center; gap:10px; border-bottom:1.5px solid var(--ink); padding-bottom:8px; margin:26px 0 14px; cursor:pointer;">
+            <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:23px; color:var(--ink);">История оценок</span>
+            <span style="margin-left:auto; color:var(--muted); font-size:13px;">{{ secRatingsI }}</span>
+          </div>
+          <sc-if value="{{ secRatings }}" hint-placeholder-val="{{ true }}">
+          <sc-for list="{{ d.ratingHist }}" as="rh" hint-placeholder-count="2">
+            <div style="display:flex; align-items:baseline; gap:14px; padding:9px 0; border-bottom:1px solid var(--hair);">
+              <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--red); width:96px; flex:none;">{{ rh.date }}</span>
+              <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--gold);">муз {{ rh.album }}</span>
+              <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--blue);">звук {{ rh.sound }}</span>
+              <span style="flex:1; font-size:13px; color:var(--ink-soft); font-style:italic;">{{ rh.note }}</span>
+            </div>
+          </sc-for>
+          </sc-if>
+        </div>
+
+        <!-- RIGHT -->
+        <div>
+          <!-- pressing -->
+          <div onClick="{{ secPressT }}" style="display:flex; align-items:center; gap:8px; margin-bottom:12px; cursor:pointer;">
+            <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:21px; color:var(--ink);">Пресс и сохранность</span>
+            <span style="margin-left:auto; color:var(--muted); font-size:13px;">{{ secPressI }}</span>
+          </div>
+          <sc-if value="{{ secPress }}" hint-placeholder-val="{{ true }}">
+          <div style="font-size:14px; line-height:1.95; color:var(--ink-soft);">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Завод</span><span style="color:var(--ink);">{{ d.plantFull }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Матрица</span><span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--ink);">{{ d.matrix }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Режим · скорость</span><span style="color:var(--ink);">{{ d.modeFull }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">ГОСТ</span><span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--ink);">{{ d.gost }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Год пресса</span><span style="color:var(--ink);">{{ d.pyear }}</span></div>
+          </div>
+          <div style="display:flex; gap:12px; margin-top:15px;">
+            <div style="flex:1; text-align:center; background:var(--field); padding:12px; border-radius:2px;"><div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);">пластинка</div><div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:25px; color:var(--green);">{{ d.gradeMedia }}</div></div>
+            <div style="flex:1; text-align:center; background:var(--field); padding:12px; border-radius:2px;"><div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);">конверт</div><div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:25px; color:var(--gold);">{{ d.gradeSleeve }}</div></div>
+          </div>
+          </sc-if>
+
+          <!-- acquisition -->
+          <div onClick="{{ secAcqT }}" style="display:flex; align-items:center; gap:8px; margin:24px 0 12px; cursor:pointer;">
+            <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:21px; color:var(--ink);">Покупка и стоимость</span>
+            <span style="margin-left:auto; color:var(--muted); font-size:13px;">{{ secAcqI }}</span>
+          </div>
+          <sc-if value="{{ secAcq }}" hint-placeholder-val="{{ true }}">
+          <div style="font-size:14px; line-height:1.95; color:var(--ink-soft);">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Где</span><span style="color:var(--ink);">{{ d.acqSrc }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Когда</span><span style="color:var(--ink);">{{ d.acqWhen }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Цена покупки</span><span style="color:var(--ink);">{{ d.acqPrice }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Оценка Discogs</span><span style="color:var(--green);">{{ d.val }}</span></div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px dotted var(--line);"><span style="color:var(--muted);">Полка</span><span style="color:var(--ink);">{{ d.shelf }}</span></div>
+          </div>
+          </sc-if>
+
+          <!-- notes -->
+          <div onClick="{{ secNotesT }}" style="display:flex; align-items:center; gap:8px; margin:24px 0 12px; cursor:pointer;">
+            <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:21px; color:var(--ink);">Заметки</span>
+            <span style="margin-left:auto; color:var(--muted); font-size:13px;">{{ secNotesI }}</span>
+          </div>
+          <sc-if value="{{ secNotes }}" hint-placeholder-val="{{ true }}">
+          <sc-for list="{{ d.noteList }}" as="n" hint-placeholder-count="2">
+            <div style="border-left:3px solid {{ n.bar }}; padding:2px 0 2px 12px; margin-bottom:13px;">
+              <div style="display:flex; align-items:baseline; gap:8px;">
+                <span style="font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:600; color:var(--ink);">{{ n.title }}</span>
+                <span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">{{ n.date }}</span>
+                <span style="font-size:11px; color:var(--gold);">{{ n.pin }}</span>
+              </div>
+              <div style="font-size:14px; color:var(--ink-soft); line-height:1.5; margin-top:3px;">{{ n.body }}</div>
+            </div>
+          </sc-for>
+          </sc-if>
+
+          <!-- play log -->
+          <div onClick="{{ secPlaysT }}" style="display:flex; align-items:center; gap:8px; margin:24px 0 12px; cursor:pointer;">
+            <span style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:21px; color:var(--ink);">Журнал прослушиваний</span>
+            <span style="margin-left:auto; color:var(--muted); font-size:13px;">{{ secPlaysI }}</span>
+          </div>
+          <sc-if value="{{ secPlays }}" hint-placeholder-val="{{ true }}">
+          <sc-for list="{{ d.playList }}" as="p" hint-placeholder-count="3">
+            <div style="display:flex; align-items:baseline; gap:10px; padding:6px 0; border-bottom:1px solid var(--hair);">
+              <span style="font-family:'PT Mono',monospace; font-size:12px; color:var(--red); flex:none; width:90px;">{{ p.date }}</span>
+              <span style="font-size:14px; color:var(--ink); flex:1;">{{ p.side }}</span>
+              <span style="font-size:12px; color:var(--muted);">{{ p.gear }}</span>
+            </div>
+          </sc-for>
+          <div style="font-family:'PT Mono',monospace; font-size:12px; color:var(--faint); margin-top:8px;">{{ d.playSummary }}</div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ D · NOTES FEED ============ -->
+  <sc-if value="{{ isNotes }}" hint-placeholder-val="{{ false }}">
+  <div style="max-width:860px; margin:0 auto; padding:34px 30px 70px;">
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--red);">Сквозная лента</div>
+    <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:46px; line-height:1; color:var(--ink); margin-top:5px;">Заметки</div>
+    <div style="display:flex; align-items:center; gap:18px; margin:22px 0 26px; padding-bottom:14px; border-bottom:1px solid var(--line); flex-wrap:wrap;">
+      <sc-for list="{{ noteChips }}" as="c" hint-placeholder-count="4">
+        <span onClick="{{ c.pick }}" style="font-family:'Cormorant Garamond',serif; font-size:17px; cursor:pointer; color:{{ c.color }}; font-weight:{{ c.weight }}; border-bottom:{{ c.border }}; padding-bottom:2px;">{{ c.label }}</span>
+      </sc-for>
+      <span style="margin-left:auto; font-family:'PT Mono',monospace; font-size:12px; color:var(--faint);">{{ noteCount }} · по дате ↓</span>
+    </div>
+    <sc-for list="{{ notesFeed }}" as="n" hint-placeholder-count="6">
+      <div onClick="{{ n.open }}" style="display:flex; gap:18px; padding:18px 0; border-bottom:1px solid var(--hair); cursor:pointer;">
+        <div style="flex:none; width:58px; height:58px; position:relative; overflow:hidden; background:{{ n.bg }};">
+          <div style="position:absolute; right:-26%; top:50%; transform:translateY(-50%); width:74%; height:74%; border-radius:50%; background:radial-gradient(circle at center, transparent 26%, rgba(0,0,0,.18) 27%, rgba(0,0,0,.18) 30%, transparent 31%);"></div>
+        </div>
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:baseline; gap:10px;">
+            <span style="font-family:'Cormorant Garamond',serif; font-size:21px; font-weight:600; color:var(--ink);">{{ n.title }}</span>
+            <span style="font-size:11px; color:var(--gold);">{{ n.pin }}</span>
+            <span style="margin-left:auto; font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">{{ n.date }}</span>
+          </div>
+          <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.04em; text-transform:uppercase; color:var(--red); margin:3px 0 6px;">{{ n.ref }}</div>
+          <div style="font-size:14px; color:var(--ink-soft); line-height:1.55;">{{ n.body }}</div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <!-- ============ E · AUDIO FORM ============ -->
+  <sc-if value="{{ isAudio }}" hint-placeholder-val="{{ false }}">
+  <div style="max-width:880px; margin:0 auto; padding:34px 30px 70px;">
+    <div onClick="{{ goBackCard }}" style="font-family:'PT Mono',monospace; font-size:12px; color:var(--muted); cursor:pointer; margin-bottom:16px;">← {{ d.title }}</div>
+    <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:42px; line-height:1; color:var(--ink);">Привязать аудио</div>
+    <div style="font-size:15px; color:var(--ink-soft); margin-top:8px; max-width:560px; line-height:1.5;">Своя оцифровка, чужой needledrop или внешний референс. Технические поля можно подтянуть автоматически из файла.</div>
+
+    <div style="margin-top:26px; display:grid; grid-template-columns:1fr 1fr; gap:26px;">
+      <div>
+        <div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;">Файл</div>
+        <div style="border:1.5px dashed var(--line); border-radius:3px; padding:26px; text-align:center; background:var(--card);">
+          <div style="font-size:30px; color:var(--faint);">♪</div>
+          <div style="font-size:14px; color:var(--ink-soft); margin-top:8px;">Перетащите файл или укажите путь</div>
+          <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint); margin-top:4px;">FLAC · WAV · MP3 → хранится локально / S3</div>
+        </div>
+
+        <div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:22px 0 10px;">Привязка</div>
+        <div style="display:grid; gap:8px;">
+          <sc-for list="{{ bindOptions }}" as="b" hint-placeholder-count="4">
+            <div onClick="{{ b.pick }}" style="display:flex; align-items:center; gap:11px; padding:11px 14px; border:1.5px solid {{ b.border }}; border-radius:2px; cursor:pointer; background:var(--card);">
+              <span style="width:16px; height:16px; border-radius:50%; border:1.5px solid {{ b.dot }}; flex:none; background:{{ b.fill }};"></span>
+              <div style="flex:1;">
+                <div style="font-size:14px; color:var(--ink); font-weight:700;">{{ b.label }}</div>
+                <div style="font-family:'PT Mono',monospace; font-size:11px; color:var(--muted);">{{ b.hint }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <sc-if value="{{ bindTrack }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:12px; display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--field); border-radius:2px;">
+          <span style="font-size:13px; color:var(--muted);">Трек:</span>
+          <span style="font-family:'PT Mono',monospace; font-size:13px; color:var(--ink);">A2 · Из вагантов ▾</span>
+        </div>
+        </sc-if>
+      </div>
+
+      <div>
+        <div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:10px;">Технические данные <span style="color:var(--green);">· авто</span></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div style="background:var(--card); border:1px solid var(--line); border-radius:2px; padding:10px 13px;"><div style="font-size:11px; color:var(--muted);">Формат</div><div style="font-family:'PT Mono',monospace; font-size:14px; color:var(--ink);">FLAC</div></div>
+          <div style="background:var(--card); border:1px solid var(--line); border-radius:2px; padding:10px 13px;"><div style="font-size:11px; color:var(--muted);">Частота</div><div style="font-family:'PT Mono',monospace; font-size:14px; color:var(--ink);">96 000 Гц</div></div>
+          <div style="background:var(--card); border:1px solid var(--line); border-radius:2px; padding:10px 13px;"><div style="font-size:11px; color:var(--muted);">Разрядность</div><div style="font-family:'PT Mono',monospace; font-size:14px; color:var(--ink);">24 бит</div></div>
+          <div style="background:var(--card); border:1px solid var(--line); border-radius:2px; padding:10px 13px;"><div style="font-size:11px; color:var(--muted);">Каналы</div><div style="font-family:'PT Mono',monospace; font-size:14px; color:var(--ink);">2 · стерео</div></div>
+        </div>
+
+        <div style="font-family:'PT Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:22px 0 10px;">Обстоятельства оцифровки</div>
+        <div style="display:grid; gap:9px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:2px; padding:9px 13px;"><span style="font-size:13px; color:var(--muted);">Головка</span><span style="font-size:13px; color:var(--ink);">Audio-Technica AT-VM95ML</span></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:2px; padding:9px 13px;"><span style="font-size:13px; color:var(--muted);">Фонокорректор</span><span style="font-size:13px; color:var(--ink);">Pro-Ject Phono Box S2</span></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:2px; padding:9px 13px;"><span style="font-size:13px; color:var(--muted);">АЦП</span><span style="font-size:13px; color:var(--ink);">RME ADI-2</span></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--card); border:1px solid var(--line); border-radius:2px; padding:9px 13px;"><span style="font-size:13px; color:var(--muted);">Обработка</span><span style="font-size:13px; color:var(--ink);">без обработки</span></div>
+        </div>
+
+        <div style="display:flex; gap:12px; margin-top:22px;">
+          <div onClick="{{ goBackCard }}" style="background:var(--blue); color:#f3ecdd; padding:11px 22px; border-radius:2px; font-weight:700; font-size:14px; cursor:pointer;">Сохранить</div>
+          <div onClick="{{ goBackCard }}" style="padding:11px 18px; border:1px solid var(--line); border-radius:2px; font-size:14px; color:var(--ink-soft); cursor:pointer;">Отмена</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- ============ F · STATS ============ -->
+  <sc-if value="{{ isStats }}" hint-placeholder-val="{{ false }}">
+  <div style="max-width:1080px; margin:0 auto; padding:34px 30px 70px;">
+    <div style="font-family:'PT Mono',monospace; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--red);">Собрание в цифрах</div>
+    <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:46px; line-height:1; color:var(--ink); margin-top:5px;">Статистика</div>
+
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin:26px 0;">
+      <sc-for list="{{ statCards }}" as="s" hint-placeholder-count="4">
+        <div style="background:var(--card); border:1px solid var(--line); border-radius:2px; padding:18px;">
+          <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:40px; line-height:1; color:{{ s.color }};">{{ s.value }}</div>
+          <div style="font-size:13px; color:var(--muted); margin-top:4px;">{{ s.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:30px;">
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:22px; color:var(--ink); border-bottom:1.5px solid var(--ink); padding-bottom:8px; margin-bottom:16px;">По заводам</div>
+        <sc-for list="{{ byPlant }}" as="b" hint-placeholder-count="5">
+          <div style="margin-bottom:13px;">
+            <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px;"><span style="color:var(--ink);">{{ b.label }}</span><span style="font-family:'PT Mono',monospace; color:var(--muted);">{{ b.count }}</span></div>
+            <div style="height:9px; background:var(--field); border-radius:1px; overflow:hidden;"><div style="height:100%; width:{{ b.pct }}; background:var(--blue);"></div></div>
+          </div>
+        </sc-for>
+      </div>
+      <div>
+        <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:22px; color:var(--ink); border-bottom:1.5px solid var(--ink); padding-bottom:8px; margin-bottom:16px;">По жанрам</div>
+        <sc-for list="{{ byGenre }}" as="b" hint-placeholder-count="4">
+          <div style="margin-bottom:13px;">
+            <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:4px;"><span style="color:var(--ink);">{{ b.label }}</span><span style="font-family:'PT Mono',monospace; color:var(--muted);">{{ b.count }}</span></div>
+            <div style="height:9px; background:var(--field); border-radius:1px; overflow:hidden;"><div style="height:100%; width:{{ b.pct }}; background:var(--gold);"></div></div>
+          </div>
+        </sc-for>
+        <div style="font-family:'Cormorant Garamond',serif; font-weight:700; font-size:22px; color:var(--ink); border-bottom:1.5px solid var(--ink); padding-bottom:8px; margin:24px 0 16px;">Давно не слушал</div>
+        <sc-for list="{{ stale }}" as="r" hint-placeholder-count="3">
+          <div onClick="{{ r.open }}" style="display:flex; align-items:center; gap:12px; padding:7px 0; border-bottom:1px solid var(--hair); cursor:pointer;">
+            <div style="width:34px; height:34px; flex:none; background:{{ r.bg }};"></div>
+            <div style="flex:1; font-family:'Cormorant Garamond',serif; font-size:18px; color:var(--ink);">{{ r.title }}</div>
+            <span style="font-family:'PT Mono',monospace; font-size:11px; color:var(--faint);">{{ r.lastTxt }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1280, &quot;height&quot;: 860}}">
+class Component extends DCLogic {
+  state = {
+    screen: 'collection', view: 'grid', theme: '', device: 'desktop',
+    sel: 0, filter: 'all', openTrack: null, cand: null, binding: 'track',
+    noteFilter: 'all',
+    sections: { tracks: true, audio: true, ratings: false, press: true, acq: true, notes: true, plays: false },
+    fav: { 0: true },
+  };
+
+  goHome() { this.setState({ screen: 'collection' }); }
+  goAdd() { this.setState({ screen: 'add', cand: null }); }
+  go(s) { this.setState({ screen: s }); }
+  openCard(i) { this.setState({ screen: 'card', sel: i, openTrack: null }); }
+  goAudio() { this.setState({ screen: 'audio' }); }
+  goBackCard() { this.setState({ screen: 'card' }); }
+  setView(v) { this.setState({ view: v }); }
+  toggleTheme() { this.setState(s => ({ theme: s.theme ? '' : 'theme-dark' })); }
+  setDevice(d) { this.setState({ device: d }); }
+  setFilter(f) { this.setState({ filter: f }); }
+  toggleSection(k) { this.setState(s => ({ sections: { ...s.sections, [k]: !s.sections[k] } })); }
+  toggleTrack(p) { this.setState(s => ({ openTrack: s.openTrack === p ? null : p })); }
+  selectCand(i) { this.setState({ cand: i }); }
+  clearCand() { this.setState({ cand: null }); }
+  createCopy() { this.setState({ screen: 'collection', cand: null }); }
+  setBinding(b) { this.setState({ binding: b }); }
+  setNoteFilter(f) { this.setState({ noteFilter: f }); }
+  toggleFav() { const i = this.state.sel; this.setState(s => ({ fav: { ...s.fav, [i]: !s.fav[i] } })); }
+
+  renderVals() {
+    const st = this.state;
+    const ST = {
+      owned:  { statusLabel: 'в коллекции', statusBg: '#2f6b4d', statusFg: '#eee2cf' },
+      wanted: { statusLabel: 'в розыске',   statusBg: '#9e2f20', statusFg: '#eee2cf' },
+      lent:   { statusLabel: 'отдал',       statusBg: '#c79436', statusFg: '#1c1a17' },
+      sold:   { statusLabel: 'продан',      statusBg: '#a89c80', statusFg: '#26221a' },
+    };
+
+    const R = [
+      { artist: 'Давид Тухманов', title: 'По волне моей памяти', year: 1976, cat: 'С60—07271-2', plant: 'Апрелевка', plantFull: 'Апрелевский ЗГ', genre: 'Эстрада', mode: 'стерео', status: 'owned', album: 5, sound: 4, audio: true, notes: true, bg: '#21459a', fg: '#ede4d2',
+        copies: 'экземпляр №1 из 2', matrix: 'С60 07271 А-2 / 4-1-2', gost: '5289—73', pyear: 1977, gradeMedia: 'NM', gradeSleeve: 'VG+', acqSrc: 'Авито · Москва', acqWhen: 'апрель 2023', acqPrice: '1 800 ₽', val: '≈ 38 $', shelf: 'секция Б · 3',
+        sides: [
+          { side: 'A', tracks: [
+            { pos: 'A1', title: 'Я мысленно вхожу в ваш кабинет', dur: '3:58', icons: '♪', detail: 'На стихи М. Волошина. Открывающая вещь — мягкая, обволакивающая. Прикреплена оцифровка стороны A.' },
+            { pos: 'A2', title: 'Из вагантов', dur: '4:42', icons: '♪ ✎', detail: '«Во французской стороне…» Вокал Игоря Иванова. Хит альбома — есть заметка и аудио.' },
+            { pos: 'A3', title: 'Из Сафо', dur: '2:31', icons: '' },
+            { pos: 'A4', title: 'Сентиментальная прогулка', dur: '4:05', icons: '♪' },
+            { pos: 'A5', title: 'Доброй ночи', dur: '5:18', icons: '' },
+          ] },
+          { side: 'B', tracks: [
+            { pos: 'B1', title: 'По волне моей памяти', dur: '3:47', icons: '♪ ✎' },
+            { pos: 'B2', title: 'Сердце, моё сердце', dur: '4:13', icons: '' },
+            { pos: 'B3', title: 'Приглашение к путешествию', dur: '3:55', icons: '♪' },
+            { pos: 'B4', title: 'Смятение', dur: '2:48', icons: '' },
+            { pos: 'B5', title: 'Посвящение в альбом', dur: '4:30', icons: '' },
+          ] },
+        ],
+        audioList: [
+          { kind: 'Сторона A — оцифровка', meta: 'FLAC · 96 kHz / 24 bit · AT-VM95ML', tag: 'needledrop', role: 'nd' },
+          { kind: 'Весь диск — референс', meta: 'YouTube · внешняя ссылка', tag: 'reference', role: 'ref' },
+        ],
+        noteList: [
+          { title: 'Про пресс', date: '12 апр 2024', body: 'Тёплая середина, верх чуть смягчён — типичная Апрелевка 77-го. На «Из вагантов» лёгкий шорох в выплавке.', pinned: true },
+          { title: 'Покупка', date: '3 мар 2023', body: 'Взял у коллекционера в Измайлово. Конверт переклеен по корешку, винил чистый.', pinned: false },
+        ],
+        playList: [
+          { date: '2 июн 2026', side: 'сторона A', gear: 'Электроника Б1-01' },
+          { date: '18 янв 2026', side: 'весь диск', gear: 'Technics SL-1200' },
+          { date: '9 сен 2025', side: 'сторона B', gear: 'Электроника Б1-01' },
+        ],
+        ratingHist: [
+          { date: 'июн 2026', album: 5, sound: 4, note: 'Спустя годы — всё ещё шедевр.' },
+          { date: 'мар 2023', album: 5, sound: 3, note: 'Звук пресса средний, но музыка пятёрка.' },
+        ],
+      },
+      { artist: 'Микаэл Таривердиев', title: 'Семнадцать мгновений весны', year: 1977, cat: 'С60—09489-90', plant: 'ЛЗГ', plantFull: 'Ленинградский ЗГ', genre: 'Саундтрек', mode: 'стерео', status: 'owned', album: 5, sound: 5, audio: true, notes: false, bg: '#b5832b', fg: '#1c1a17',
+        copies: 'единственный экземпляр', matrix: 'С60 09489 1-1', gost: '5289—73', pyear: 1977, gradeMedia: 'NM', gradeSleeve: 'NM', acqSrc: 'подарок', acqWhen: '2020', acqPrice: '—', val: '≈ 25 $', shelf: 'секция А · 1',
+        sides: [
+          { side: 'A', tracks: [
+            { pos: 'A1', title: 'Мгновения (инструментал)', dur: '2:40', icons: '♪' },
+            { pos: 'A2', title: 'Песня о далёкой Родине', dur: '3:20', icons: '' },
+            { pos: 'A3', title: 'Тревожная', dur: '2:05', icons: '' },
+          ] },
+          { side: 'B', tracks: [
+            { pos: 'B1', title: 'Где-то далеко', dur: '3:10', icons: '♪' },
+            { pos: 'B2', title: 'Финал', dur: '3:40', icons: '' },
+          ] },
+        ],
+        audioList: [{ kind: 'Сторона A — оцифровка', meta: 'WAV · 192 kHz / 24 bit', tag: 'needledrop', role: 'nd' }],
+        noteList: [],
+        playList: [{ date: '14 мар 2026', side: 'весь диск', gear: 'Technics SL-1200' }],
+        ratingHist: [{ date: 'мар 2026', album: 5, sound: 5, note: 'Эталонная тишина ленинградского пресса.' }],
+      },
+      { artist: 'ВИА «Песняры»', title: 'Песняры II', year: 1974, cat: 'С60—05011-2', plant: 'Рига', plantFull: 'Рижский ЗГ', genre: 'Фолк-рок', mode: 'стерео', status: 'owned', album: 4, sound: 3, audio: false, notes: true, bg: '#9e2f20', fg: '#eee2cf',
+        copies: 'единственный экземпляр', matrix: 'С60 05011 2-2-1', gost: '5289—68', pyear: 1974, gradeMedia: 'VG+', gradeSleeve: 'VG', acqSrc: 'блошиный рынок', acqWhen: 'июль 2021', acqPrice: '600 ₽', val: '≈ 18 $', shelf: 'секция Б · 7',
+        sides: [
+          { side: 'A', tracks: [
+            { pos: 'A1', title: 'Косил Ясь конюшину', dur: '3:05', icons: '' },
+            { pos: 'A2', title: 'Александрына', dur: '3:40', icons: '✎' },
+            { pos: 'A3', title: 'Хатынь', dur: '4:10', icons: '' },
+          ] },
+          { side: 'B', tracks: [
+            { pos: 'B1', title: 'Беловежская пуща', dur: '4:25', icons: '' },
+            { pos: 'B2', title: 'Берёза', dur: '3:15', icons: '' },
+          ] },
+        ],
+        audioList: [],
+        noteList: [{ title: 'Рижский пресс', date: '8 авг 2021', body: 'Рига даёт более яркий верх, чем Апрелевка. Конверт потёрт, но винил играет чисто.', pinned: false }],
+        playList: [{ date: '2 фев 2026', side: 'сторона A', gear: 'Электроника Б1-01' }],
+        ratingHist: [{ date: 'авг 2021', album: 4, sound: 3, note: '' }],
+      },
+      { artist: 'Алла Пугачёва', title: 'Зеркало души', year: 1978, cat: 'С60—10141-2', plant: 'Апрелевка', plantFull: 'Апрелевский ЗГ', genre: 'Эстрада', mode: 'стерео', status: 'owned', album: 4, sound: 4, audio: true, notes: true, bg: '#2f6b4d', fg: '#eee2cf',
+        copies: 'единственный экземпляр', matrix: 'С60 10141 4-1', gost: '5289—73', pyear: 1978, gradeMedia: 'VG+', gradeSleeve: 'VG+', acqSrc: 'наследство', acqWhen: '2019', acqPrice: '—', val: '≈ 22 $', shelf: 'секция А · 4',
+        sides: [
+          { side: 'A', tracks: [
+            { pos: 'A1', title: 'Очень хорошо', dur: '3:30', icons: '' },
+            { pos: 'A2', title: 'Сонет Шекспира №90', dur: '4:05', icons: '♪' },
+            { pos: 'A3', title: 'Приезжай', dur: '3:20', icons: '' },
+          ] },
+          { side: 'B', tracks: [
+            { pos: 'B1', title: 'Любовь одна виновата', dur: '3:45', icons: '' },
+            { pos: 'B2', title: 'Половодье', dur: '4:00', icons: '✎' },
+          ] },
+        ],
+        audioList: [{ kind: 'A2 «Сонет Шекспира» — оцифровка', meta: 'FLAC · 96 kHz / 24 bit', tag: 'needledrop', role: 'nd' }],
+        noteList: [{ title: 'Семейная', date: '1 янв 2019', body: 'Досталась от бабушки. Подписан год на конверте карандашом — 1979.', pinned: true }],
+        playList: [{ date: '20 дек 2025', side: 'весь диск', gear: 'Technics SL-1200' }],
+        ratingHist: [{ date: 'янв 2019', album: 4, sound: 4, note: '' }],
+      },
+      { artist: 'Эдуард Артемьев', title: 'Метаморфозы', year: 1980, cat: 'С60—14127-8', plant: 'Москва', plantFull: 'МОЗ «Грамзапись»', genre: 'Электроника', mode: 'стерео', status: 'owned', album: 5, sound: 4, audio: false, notes: false, bg: '#1c1a17', fg: '#d8b65a',
+        copies: 'единственный экземпляр', matrix: 'С60 14127 1-1', gost: '5289—80', pyear: 1980, gradeMedia: 'NM', gradeSleeve: 'VG+', acqSrc: 'Авито · СПб', acqWhen: 'окт 2022', acqPrice: '2 400 ₽', val: '≈ 55 $', shelf: 'секция В · 2',
+        sides: [
+          { side: 'A', tracks: [
+            { pos: 'A1', title: 'Метаморфоза I', dur: '6:20', icons: '' },
+            { pos: 'A2', title: 'Метаморфоза II', dur: '5:10', icons: '' },
+          ] },
+          { side: 'B', tracks: [
+            { pos: 'B1', title: 'Метаморфоза III', dur: '7:05', icons: '' },
+            { pos: 'B2', title: 'Метаморфоза IV', dur: '5:40', icons: '' },
+          ] },
+        ],
+        audioList: [], noteList: [],
+        playList: [{ date: '11 ноя 2025', side: 'сторона A', gear: 'Technics SL-1200' }],
+        ratingHist: [{ date: 'окт 2022', album: 5, sound: 4, note: 'Редкость. Синтезатор АНС во всей красе.' }],
+      },
+      { artist: 'Святослав Рихтер', title: 'Шопен · Этюды', year: 1971, cat: 'СМ—02845-6', plant: 'ЛЗГ', plantFull: 'Ленинградский ЗГ', genre: 'Классика', mode: 'квадро', status: 'owned', album: 5, sound: 3, audio: false, notes: true, bg: '#e3d9c0', fg: '#21459a',
+        copies: 'единственный экземпляр', matrix: 'СМ 02845 1-2', gost: '5289—68', pyear: 1972, gradeMedia: 'VG', gradeSleeve: 'VG', acqSrc: 'комиссионка', acqWhen: 'мар 2023', acqPrice: '900 ₽', val: '≈ 30 $', shelf: 'секция Г · 1',
+        sides: [
+          { side: 'A', tracks: [
+            { pos: 'A1', title: 'Этюд op.10 №3 «Тристес»', dur: '4:10', icons: '' },
+            { pos: 'A2', title: 'Этюд op.10 №12 «Революционный»', dur: '2:40', icons: '' },
+            { pos: 'A3', title: 'Этюд op.25 №1 «Эолова арфа»', dur: '2:20', icons: '' },
+          ] },
+          { side: 'B', tracks: [
+            { pos: 'B1', title: 'Этюд op.25 №11 «Зимний ветер»', dur: '3:55', icons: '' },
+            { pos: 'B2', title: 'Этюд op.10 №1 до мажор', dur: '2:05', icons: '' },
+          ] },
+        ],
+        audioList: [], 
+        noteList: [{ title: 'Квадро', date: '5 апр 2023', body: 'Серия СМ — квадрофония. На обычном стерео играет сводкой, но слышно пространство.', pinned: false }],
+        playList: [{ date: '30 окт 2025', side: 'сторона A', gear: 'Электроника Б1-01' }],
+        ratingHist: [{ date: 'апр 2023', album: 5, sound: 3, note: 'Износ дорожки на A1.' }],
+      },
+      { artist: 'ВИА «Земляне»', title: 'Трава у дома', year: 1983, cat: 'С62—19371-2', plant: '—', plantFull: '—', genre: 'Рок', mode: 'стерео', status: 'wanted', album: 0, sound: 0, audio: false, notes: false, bg: '#3a3f8a', fg: '#e3d9c0',
+        copies: 'в розыске', matrix: '—', gost: '—', pyear: '—', gradeMedia: '—', gradeSleeve: '—', acqSrc: 'ищу', acqWhen: '—', acqPrice: '—', val: '≈ 12 $', shelf: '—',
+        sides: [
+          { side: 'A', tracks: [{ pos: 'A1', title: 'Трава у дома', dur: '4:15', icons: '' }] },
+          { side: 'B', tracks: [{ pos: 'B1', title: 'Каскадёры', dur: '3:50', icons: '' }] },
+        ],
+        audioList: [], noteList: [{ title: 'Вишлист', date: '7 май 2026', body: 'Нужен апрелевский пресс гибкой пластинки. Видел на Авито за 12$, думаю.', pinned: false }],
+        playList: [], ratingHist: [],
+      },
+      { artist: 'Муслим Магомаев', title: 'Поёт Муслим Магомаев', year: 1969, cat: 'Д—025417-8', plant: 'Апрелевка', plantFull: 'Апрелевский ЗГ', genre: 'Эстрада', mode: 'моно', status: 'lent', album: 4, sound: 4, audio: true, notes: false, bg: '#7d4a86', fg: '#eee2cf',
+        copies: 'отдал послушать · С. Петров', matrix: 'Д 025417 2-1', gost: '5289—61', pyear: 1969, gradeMedia: 'VG+', gradeSleeve: 'VG', acqSrc: 'барахолка', acqWhen: 'июн 2020', acqPrice: '400 ₽', val: '≈ 15 $', shelf: 'у С. Петрова',
+        sides: [
+          { side: 'A', tracks: [
+            { pos: 'A1', title: 'Лучший город земли', dur: '3:00', icons: '♪' },
+            { pos: 'A2', title: 'Чёртово колесо', dur: '2:50', icons: '' },
+            { pos: 'A3', title: 'Свадьба', dur: '3:20', icons: '' },
+          ] },
+          { side: 'B', tracks: [
+            { pos: 'B1', title: 'Вернись', dur: '3:35', icons: '' },
+            { pos: 'B2', title: 'Загадай желание', dur: '3:05', icons: '' },
+          ] },
+        ],
+        audioList: [{ kind: 'Сторона A — оцифровка', meta: 'FLAC · 48 kHz / 24 bit · моно', tag: 'needledrop', role: 'nd' }],
+        noteList: [],
+        playList: [{ date: '3 авг 2025', side: 'сторона A', gear: 'Электроника Б1-01' }],
+        ratingHist: [{ date: 'июн 2020', album: 4, sound: 4, note: 'Ранний моно-пресс, голос мощный.' }],
+      },
+    ];
+
+    const decorate = (r, i) => {
+      const stt = ST[r.status];
+      return {
+        ...r, ...stt, idx: i,
+        ratingTxt: r.album ? (r.album + '·' + r.sound) : '—',
+        ind: [r.audio ? '♪' : '', r.notes ? '✎' : ''].filter(Boolean).join(' '),
+        ind2: [r.plant !== '—' ? r.plant : null, r.audio ? 'аудио' : null, r.notes ? 'заметки' : null].filter(Boolean).join(' · '),
+        open: () => this.openCard(i),
+      };
+    };
+    const decorated = R.map(decorate);
+
+    // collection filter
+    const genresAll = ['all', 'Эстрада', 'Классика', 'Рок', 'Электроника'];
+    const filtered = st.filter === 'all' ? decorated
+      : decorated.filter(r => (st.filter === 'Рок' ? (r.genre === 'Рок' || r.genre === 'Фолк-рок') : r.genre === st.filter));
+    const filterChips = genresAll.map(g => {
+      const active = st.filter === g;
+      return {
+        label: g === 'all' ? 'Все' : g, pick: () => this.setFilter(g),
+        color: active ? 'var(--red)' : 'var(--muted)',
+        weight: active ? '700' : '500',
+        border: active ? '2px solid var(--red)' : '2px solid transparent',
+      };
+    });
+
+    // nav
+    const navDef = [
+      { key: 'collection', label: 'Коллекция' },
+      { key: 'notes', label: 'Заметки' },
+      { key: 'stats', label: 'Статистика' },
+    ];
+    const navItems = navDef.map(n => {
+      const active = st.screen === n.key || (n.key === 'collection' && st.screen === 'card');
+      return {
+        label: n.label, go: () => this.go(n.key),
+        color: active ? 'var(--ink)' : 'var(--muted)',
+        bg: active ? 'var(--raise)' : 'transparent',
+        weight: active ? '700' : '400',
+      };
+    });
+
+    // selected detail
+    const d0 = decorated[st.sel];
+    const sidesView = (d0.sides || []).map(s => ({
+      side: s.side,
+      tracks: s.tracks.map(t => ({
+        ...t,
+        open: st.openTrack === t.pos,
+        toggle: () => this.toggleTrack(t.pos),
+        detail: t.detail || 'Дополнительных данных по треку пока нет. Разверните, чтобы прикрепить аудио или заметку.',
+      })),
+    }));
+    const trackCount = (d0.sides || []).reduce((a, s) => a + s.tracks.length, 0);
+    const d = {
+      ...d0,
+      albumTxt: d0.album || '—', soundTxt: d0.sound || '—',
+      trackMeta: (d0.sides || []).length + ' стороны · ' + trackCount + ' треков',
+      modeFull: d0.mode + ' · 33⅓ · ⌀30',
+      playSummary: d0.playList && d0.playList.length ? ('всего прослушиваний: ' + d0.playList.length) : 'ещё не слушали',
+      audioList: (d0.audioList || []).map(a => ({
+        ...a,
+        dotBg: a.role === 'ref' ? 'var(--gold)' : 'var(--red)',
+        tagColor: a.role === 'ref' ? 'var(--gold)' : 'var(--green)',
+      })),
+      noteList: (d0.noteList || []).map(n => ({ ...n, bar: n.pinned ? 'var(--gold)' : 'var(--blue)', pin: n.pinned ? '★ закреплено' : '' })),
+    };
+
+    // sections accordion
+    const sec = st.sections;
+    const arr = (b) => b ? '▾' : '▸';
+
+    // candidates (Add screen)
+    const candData = [
+      { title: 'По волне моей памяти', artist: 'Давид Тухманов', cat: 'С60—07271-2', meta: '1976 · СССР · Vinyl, LP, Album', match: 'точное', bg: '#21459a', matrix: 'С60 07271 А-2',
+        ys: '1976 · СССР', fmt: 'Vinyl · LP · Album',
+        sides: [{ side: 'A', tracks: [{ pos: 'A1', title: 'Я мысленно вхожу…' }, { pos: 'A2', title: 'Из вагантов' }, { pos: 'A3', title: 'Из Сафо' }] }, { side: 'B', tracks: [{ pos: 'B1', title: 'По волне моей памяти' }, { pos: 'B2', title: 'Сердце, моё сердце' }] }] },
+      { title: 'По волне моей памяти', artist: 'Давид Тухманов', cat: 'С60 07271-2', meta: '1976 · СССР · переиздание 1981', match: 'версия', bg: '#9e2f20', matrix: 'С60 07271 4-2',
+        ys: '1976 (пресс 1981) · СССР', fmt: 'Vinyl · LP · RE',
+        sides: [{ side: 'A', tracks: [{ pos: 'A1', title: 'Я мысленно вхожу…' }, { pos: 'A2', title: 'Из вагантов' }] }, { side: 'B', tracks: [{ pos: 'B1', title: 'По волне моей памяти' }] }] },
+      { title: 'По волне моей памяти', artist: 'D. Tukhmanov', cat: 'C60-07271-2', meta: '1976 · экспорт · стерео', match: 'похоже', bg: '#2f6b4d', matrix: 'C60 07271 1-1',
+        ys: '1976 · экспорт', fmt: 'Vinyl · LP',
+        sides: [{ side: 'A', tracks: [{ pos: 'A1', title: 'I Enter Your Study' }] }, { side: 'B', tracks: [{ pos: 'B1', title: 'On The Wave Of My Memory' }] }] },
+      { title: 'По волне моей памяти', artist: 'Давид Тухманов', cat: 'С60—07271', meta: '1976 · гибкая пластинка', match: 'похоже', bg: '#b5832b', matrix: 'С60 07271 Г',
+        ys: '1976 · флекси', fmt: 'Flexi-disc',
+        sides: [{ side: 'A', tracks: [{ pos: 'A1', title: 'Из вагантов' }] }] },
+    ];
+    const candidates = candData.map((c, i) => {
+      const active = st.cand === i;
+      const mm = { 'точное': { matchBg: '#2f6b4d', matchFg: '#eee2cf' }, 'версия': { matchBg: '#c79436', matchFg: '#1c1a17' }, 'похоже': { matchBg: '#a89c80', matchFg: '#26221a' } }[c.match];
+      return { ...c, ...mm, pick: () => this.selectCand(i), border: active ? 'var(--red)' : 'var(--line)' };
+    });
+    const candPick = st.cand != null ? candidates[st.cand] : null;
+
+    // notes feed
+    const noteFilterDef = ['all', 'pinned', 'Эстрада', 'Классика'];
+    let feed = [];
+    decorated.forEach(r => (r.noteList || []).forEach(n => feed.push({
+      ...n, bg: r.bg, fg: r.fg, ref: r.artist + ' — ' + r.title, recIdx: r.idx, genre: r.genre,
+      pin: n.pinned ? '★' : '', open: () => this.openCard(r.idx),
+    })));
+    feed.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+    let feedShown = feed;
+    if (st.noteFilter === 'pinned') feedShown = feed.filter(n => n.pinned);
+    else if (st.noteFilter !== 'all') feedShown = feed.filter(n => n.genre === st.noteFilter);
+    const noteChips = noteFilterDef.map(f => {
+      const active = st.noteFilter === f;
+      return {
+        label: f === 'all' ? 'Все' : (f === 'pinned' ? 'Закреплённые' : f),
+        pick: () => this.setNoteFilter(f),
+        color: active ? 'var(--red)' : 'var(--muted)', weight: active ? '700' : '500',
+        border: active ? '2px solid var(--red)' : '2px solid transparent',
+      };
+    });
+
+    // binding options (Audio screen)
+    const bindDef = [
+      { key: 'track', label: 'К конкретному треку', hint: 'role = track' },
+      { key: 'side', label: 'К стороне целиком', hint: 'role = full_side' },
+      { key: 'album', label: 'Ко всему диску', hint: 'role = full_album' },
+      { key: 'ref', label: 'Внешний референс', hint: 'role = reference · ютуб/чужое' },
+    ];
+    const bindOptions = bindDef.map(b => {
+      const active = st.binding === b.key;
+      return { ...b, pick: () => this.setBinding(b.key), border: active ? 'var(--blue)' : 'var(--line)', dot: active ? 'var(--blue)' : 'var(--faint)', fill: active ? 'var(--blue)' : 'transparent' };
+    });
+
+    // stats
+    const total = decorated.length;
+    const owned = decorated.filter(r => r.status === 'owned' || r.status === 'lent').length;
+    const wanted = decorated.filter(r => r.status === 'wanted').length;
+    const withAudio = decorated.filter(r => r.audio).length;
+    const statCards = [
+      { value: total, label: 'всего пластинок', color: 'var(--ink)' },
+      { value: owned, label: 'в коллекции', color: 'var(--green)' },
+      { value: withAudio, label: 'с оцифровкой', color: 'var(--blue)' },
+      { value: wanted, label: 'в розыске', color: 'var(--red)' },
+    ];
+    const tally = (key) => {
+      const m = {};
+      decorated.forEach(r => { const v = r[key]; if (v && v !== '—') m[v] = (m[v] || 0) + 1; });
+      const max = Math.max(1, ...Object.values(m));
+      return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([label, count]) => ({ label, count, pct: Math.round(count / max * 100) + '%' }));
+    };
+    const byPlant = tally('plantFull');
+    const byGenre = tally('genre');
+    const stale = decorated.filter(r => r.status !== 'wanted').slice(2, 5).map(r => ({ ...r, lastTxt: r.playList && r.playList.length ? r.playList[0].date : 'не слушали' }));
+
+    // responsive card
+    const mob = st.device === 'mobile';
+
+    return {
+      themeClass: st.theme,
+      themeIcon: st.theme ? '☀' : '☾',
+      goHome: () => this.goHome(), goAdd: () => this.goAdd(), goAudio: () => this.goAudio(),
+      goBackCard: () => this.goBackCard(), toggleTheme: () => this.toggleTheme(),
+      navItems,
+      isCollection: st.screen === 'collection', isAdd: st.screen === 'add',
+      isCard: st.screen === 'card', isNotes: st.screen === 'notes',
+      isAudio: st.screen === 'audio', isStats: st.screen === 'stats',
+      // collection
+      isGrid: st.view === 'grid', isList: st.view === 'list',
+      viewGrid: () => this.setView('grid'), viewList: () => this.setView('list'),
+      gridBg: st.view === 'grid' ? 'var(--paper)' : 'transparent', gridFg: st.view === 'grid' ? 'var(--ink)' : 'var(--faint)',
+      listBg: st.view === 'list' ? 'var(--paper)' : 'transparent', listFg: st.view === 'list' ? 'var(--ink)' : 'var(--faint)',
+      shownRecords: filtered, shownCount: filtered.length + ' из ' + total, filterChips,
+      // add
+      candidates, hasCand: candPick != null, candPick, clearCand: () => this.clearCand(), createCopy: () => this.createCopy(),
+      // card
+      d, sidesView,
+      cardW: mob ? '404px' : '100%', cardBorder: mob ? '8px solid #1c1a17' : '1px solid var(--line)',
+      cardRadius: mob ? '34px' : '3px', headDir: mob ? 'column' : 'row',
+      coverW: mob ? '100%' : '320px', coverAR: mob ? '1.2' : 'auto', bodyCols: mob ? '1fr' : '1.5fr 1fr',
+      deskOn: () => this.setDevice('desktop'), mobOn: () => this.setDevice('mobile'),
+      deskBg: !mob ? 'var(--paper)' : 'transparent', deskFg: !mob ? 'var(--ink)' : 'var(--faint)',
+      mobBg: mob ? 'var(--paper)' : 'transparent', mobFg: mob ? 'var(--ink)' : 'var(--faint)',
+      favIcon: st.fav[st.sel] ? '★' : '☆', favColor: st.fav[st.sel] ? 'var(--gold)' : 'var(--faint)', toggleFav: () => this.toggleFav(),
+      noAudio: (d.audioList || []).length === 0,
+      secTracks: sec.tracks, secAudio: sec.audio, secRatings: sec.ratings, secPress: sec.press, secAcq: sec.acq, secNotes: sec.notes, secPlays: sec.plays,
+      secTracksI: arr(sec.tracks), secAudioI: arr(sec.audio), secRatingsI: arr(sec.ratings), secPressI: arr(sec.press), secAcqI: arr(sec.acq), secNotesI: arr(sec.notes), secPlaysI: arr(sec.plays),
+      secTracksT: () => this.toggleSection('tracks'), secAudioT: () => this.toggleSection('audio'), secRatingsT: () => this.toggleSection('ratings'),
+      secPressT: () => this.toggleSection('press'), secAcqT: () => this.toggleSection('acq'), secNotesT: () => this.toggleSection('notes'), secPlaysT: () => this.toggleSection('plays'),
+      // notes
+      notesFeed: feedShown, noteChips, noteCount: feedShown.length + ' заметок',
+      // audio
+      bindOptions, bindTrack: st.binding === 'track',
+      // stats
+      statCards, byPlant, byGenre, stale,
+    };
+  }
+}
+</script>
+</body>
+</html>
