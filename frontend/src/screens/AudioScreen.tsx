@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { getCopy, createAudio, ApiError } from "../api/client";
 import type { CopyRead } from "../types";
 import { Button, Label, Select, Text } from "../components/form";
@@ -16,13 +16,15 @@ const BINDINGS: { value: Binding; label: string }[] = [
 export function AudioScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const presetTrack = params.get("track");
   const [copy, setCopy] = useState<CopyRead | null>(null);
 
-  const [binding, setBinding] = useState<Binding>("side");
+  const [binding, setBinding] = useState<Binding>(presetTrack ? "track" : "side");
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
-  const [trackPos, setTrackPos] = useState("");
+  const [trackPos, setTrackPos] = useState(presetTrack ?? "");
   const [side, setSide] = useState("A");
   const [cartridge, setCartridge] = useState("");
   const [preamp, setPreamp] = useState("");

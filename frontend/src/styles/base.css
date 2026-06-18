@@ -24,6 +24,20 @@ a {
   text-decoration: none;
 }
 
+/* Доступность: видимое фокус-кольцо для клавиатурной навигации */
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
 /* Надзаголовок (PT Mono, uppercase, letter-spacing) */
 .overline {
   font-family: var(--font-mono);

@@ -178,37 +178,7 @@ export function CardScreen() {
               title="Треклист"
               hint={r ? `${groupBySide(r.tracklist).length} стор. · ${r.tracklist.length} треков` : undefined}
             >
-              {r &&
-                groupBySide(r.tracklist).map(([side, tracks]) => (
-                  <div key={side} style={{ marginBottom: 14 }}>
-                    <div
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: 11,
-                        letterSpacing: ".1em",
-                        textTransform: "uppercase",
-                        color: "var(--red)",
-                        marginBottom: 6,
-                      }}
-                    >
-                      Сторона {side}
-                    </div>
-                    {tracks.map((t) => (
-                      <div
-                        key={t.position}
-                        style={{ display: "flex", alignItems: "baseline", gap: 13, padding: "8px 0", borderBottom: "1px solid var(--hair)" }}
-                      >
-                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--faint)", width: 28 }}>
-                          {t.position}
-                        </span>
-                        <span style={{ flex: 1, fontFamily: "var(--font-display)", fontSize: 19 }}>{t.title}</span>
-                        <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--faint)" }}>
-                          {t.duration_text}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                ))}
+              {r && <TrackList copyId={c.id} tracks={r.tracklist} />}
             </Accordion>
 
             <Accordion title="Аудио">
@@ -239,6 +209,70 @@ export function CardScreen() {
         </div>
       </div>
     </div>
+  );
+}
+
+function TrackList({ copyId, tracks }: { copyId: string; tracks: Track[] }) {
+  const [open, setOpen] = useState<string | null>(null);
+  return (
+    <>
+      {groupBySide(tracks).map(([side, group]) => (
+        <div key={side} style={{ marginBottom: 14 }}>
+          <div
+            style={{
+              fontFamily: "var(--font-mono)",
+              fontSize: 11,
+              letterSpacing: ".1em",
+              textTransform: "uppercase",
+              color: "var(--red)",
+              marginBottom: 6,
+            }}
+          >
+            Сторона {side}
+          </div>
+          {group.map((t) => {
+            const isOpen = open === t.position;
+            return (
+              <div key={t.position} style={{ borderBottom: "1px solid var(--hair)" }}>
+                <div
+                  onClick={() => setOpen(isOpen ? null : t.position)}
+                  className="list-row"
+                  style={{ display: "flex", alignItems: "baseline", gap: 13, padding: "8px 6px", cursor: "pointer" }}
+                >
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--faint)", width: 28 }}>
+                    {t.position}
+                  </span>
+                  <span style={{ flex: 1, fontFamily: "var(--font-display)", fontSize: 19 }}>{t.title}</span>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--faint)" }}>{t.duration_text}</span>
+                </div>
+                {isOpen && (
+                  <div style={{ padding: "2px 6px 12px 41px" }}>
+                    <div style={{ fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.5 }}>
+                      {[t.composer, t.artist].filter(Boolean).join(" · ") || "Можно прикрепить оцифровку к этому треку."}
+                    </div>
+                    <div style={{ marginTop: 9 }}>
+                      <Link
+                        to={`/copy/${copyId}/audio?track=${encodeURIComponent(t.position)}`}
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: 11,
+                          color: "var(--blue)",
+                          border: "1px solid var(--line)",
+                          borderRadius: 2,
+                          padding: "4px 9px",
+                        }}
+                      >
+                        + аудио к треку
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </>
   );
 }
 

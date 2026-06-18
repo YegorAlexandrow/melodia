@@ -28,6 +28,8 @@ export interface Track {
   artist?: string | null;
   duration_text?: string | null;
   duration_sec?: number | null;
+  composer?: string | null;
+  performers?: string[];
 }
 
 export interface Identifier {
