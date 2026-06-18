@@ -3,6 +3,7 @@
 
 export { AddScreen } from "./AddScreen";
 export { CardScreen } from "./CardScreen";
+export { CollectionScreen } from "./CollectionScreen";
 
 interface StubProps {
   overline: string;
@@ -17,16 +18,6 @@ function ScreenStub({ overline, title, note }: StubProps) {
       <h1>{title}</h1>
       <p className="lead">{note}</p>
     </div>
-  );
-}
-
-export function CollectionScreen() {
-  return (
-    <ScreenStub
-      overline="Личное собрание · винил"
-      title="Коллекция"
-      note="Экран A. Сетка обложек / плотный список, поиск и фильтры. Скоро."
-    />
   );
 }
 

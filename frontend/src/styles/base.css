@@ -124,6 +124,11 @@ a {
   line-height: 1.55;
 }
 
+/* Подсветка строк списка по наведению */
+.list-row:hover {
+  background: var(--raise);
+}
+
 /* --- Индикатор связи с бэкендом (подвал) --- */
 .health {
   display: flex;

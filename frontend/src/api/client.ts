@@ -70,8 +70,34 @@ export function createCopies(
   });
 }
 
-export function listCopies(): Promise<CopyListItem[]> {
-  return request<CopyListItem[]>("/copies");
+export interface CopyQuery {
+  status?: string;
+  genre?: string;
+  plant?: string;
+  tag?: string;
+  favorite?: boolean;
+  q?: string;
+  sort?: "year" | "artist" | "added";
+}
+
+export function listCopies(params: CopyQuery = {}): Promise<CopyListItem[]> {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
+  }
+  const suffix = qs.toString() ? `?${qs.toString()}` : "";
+  return request<CopyListItem[]>(`/copies${suffix}`);
+}
+
+export interface Facets {
+  total: number;
+  genres: string[];
+  plants: string[];
+  status_counts: Record<string, number>;
+}
+
+export function getFacets(): Promise<Facets> {
+  return request<Facets>("/copies/facets");
 }
 
 export function getCopy(id: string): Promise<CopyRead> {

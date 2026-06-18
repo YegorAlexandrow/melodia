@@ -1,12 +1,15 @@
-"""API: создание и чтение экземпляров (Copy)."""
+"""API: создание, список (с фильтрами), фасеты и чтение экземпляров (Copy)."""
 
 from __future__ import annotations
 
-from beanie import PydanticObjectId
-from fastapi import APIRouter, HTTPException
+from typing import Any, Optional
 
-from ..models.catalog import Copy
+from beanie import PydanticObjectId
+from fastapi import APIRouter, HTTPException, Query
+
+from ..models.catalog import Copy, CopyStatus
 from ..schemas import CopyCreate, CopyListItem, CopyRead
+from ..services.collection import CopyFilters, enrich, facets, query_copies
 from ..services.copies import copy_position, create_copies, get_copy
 from ..services.discogs import DiscogsError
 from ..services.releases import get_cached_release
@@ -36,11 +39,31 @@ async def create(body: CopyCreate) -> list[CopyRead]:
 
 
 @router.get("", response_model=list[CopyListItem])
-async def list_copies() -> list[CopyListItem]:
-    copies = (
-        await Copy.find(Copy.not_deleted()).sort("-created_at").to_list()
+async def list_copies(
+    status: Optional[CopyStatus] = None,
+    genre: Optional[str] = None,
+    plant: Optional[str] = None,
+    tag: Optional[str] = None,
+    favorite: Optional[bool] = None,
+    q: Optional[str] = None,
+    sort: str = Query("year", pattern="^(year|artist|added)$"),
+) -> list[CopyListItem]:
+    filters = CopyFilters(
+        status=status,
+        genre=genre,
+        plant_code=plant,
+        tag=tag,
+        favorite=favorite,
+        q=q,
+        sort=sort,
     )
-    return [CopyListItem.from_doc(c) for c in copies]
+    copies = await query_copies(filters)
+    return await enrich(copies)
+
+
+@router.get("/facets")
+async def collection_facets() -> dict[str, Any]:
+    return await facets()
 
 
 @router.get("/{copy_id}", response_model=CopyRead)
