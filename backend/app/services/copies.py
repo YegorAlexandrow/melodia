@@ -58,6 +58,28 @@ async def get_copy(copy_id: PydanticObjectId) -> Copy | None:
     return copy
 
 
+async def update_copy(copy: Copy, data: dict) -> Copy:
+    """Применить частичное обновление личных полей экземпляра."""
+
+    for field, value in data.items():
+        setattr(copy, field, value)
+    await copy.save()
+    return copy
+
+
+async def add_rating(
+    copy: Copy,
+    album: int | None = None,
+    sound: int | None = None,
+    note: str | None = None,
+) -> Copy:
+    """Добавить запись в историю оценок и обновить текущие значения."""
+
+    copy.add_rating(album=album, sound=sound, note=note)  # утилита модели
+    await copy.save()
+    return copy
+
+
 async def copy_position(copy: Copy) -> tuple[int, int]:
     """Порядковый номер экземпляра среди экземпляров того же релиза: (index, total).
 

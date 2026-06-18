@@ -79,9 +79,9 @@ async def _audio_copy_ids() -> set:
 
 
 async def _note_copy_ids() -> set:
-    # Beanie хранит Link как поджокумент с ключом "id".
+    # Beanie хранит Link как DBRef → id извлекаем по пути "target_copy.$id".
     coll = Note.get_pymongo_collection()
-    ids = await coll.distinct("target_copy.id", {"deleted_at": None})
+    ids = await coll.distinct("target_copy.$id", {"deleted_at": None})
     return {i for i in ids if i is not None}
 
 

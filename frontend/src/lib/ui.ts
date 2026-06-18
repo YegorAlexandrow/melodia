@@ -41,6 +41,31 @@ export function ratingCompact(
   return `${album ?? "—"}·${sound ?? "—"}`;
 }
 
+// Шкала Goldmine (от лучшего к худшему) + цвет по группам.
+export const GRADES = ["M", "NM", "VG+", "VG", "G+", "G", "F", "P"];
+export function gradeColor(g?: string | null): string {
+  if (!g) return "var(--faint)";
+  if (g === "M" || g === "NM") return "var(--green)";
+  if (g === "VG+" || g === "VG") return "var(--gold)";
+  if (g === "G+" || g === "G") return "var(--red)";
+  return "var(--faint)";
+}
+
+export const SOUND_MODES: { value: string; label: string }[] = [
+  { value: "mono", label: "моно" },
+  { value: "stereo", label: "стерео" },
+  { value: "quad", label: "квадро" },
+];
+
+export const STATUSES: { value: CopyStatus; label: string }[] = [
+  { value: "owned", label: "в коллекции" },
+  { value: "wanted", label: "в розыске" },
+  { value: "ordered", label: "заказано" },
+  { value: "lent_out", label: "отдал" },
+  { value: "sold", label: "продан" },
+  { value: "gifted", label: "подарен" },
+];
+
 export function formatEpoch(ms?: number | null): string {
   if (!ms) return "";
   const d = new Date(ms);

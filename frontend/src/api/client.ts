@@ -103,3 +103,75 @@ export function getFacets(): Promise<Facets> {
 export function getCopy(id: string): Promise<CopyRead> {
   return request<CopyRead>(`/copies/${id}`);
 }
+
+export function updateCopy(id: string, patch: Record<string, unknown>): Promise<CopyRead> {
+  return request<CopyRead>(`/copies/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
+}
+
+export function addRating(
+  id: string,
+  payload: { album?: number | null; sound?: number | null; note?: string },
+): Promise<CopyRead> {
+  return request<CopyRead>(`/copies/${id}/ratings`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+// --- Notes ---
+export interface NoteRead {
+  id: string;
+  body: string;
+  title?: string | null;
+  target_kind: string;
+  copy_id?: string | null;
+  track_position?: string | null;
+  pinned: boolean;
+  tags: string[];
+  created_at: number;
+  updated_at: number;
+}
+
+export function listNotes(params: { copy_id?: string; pinned?: boolean; q?: string } = {}): Promise<
+  NoteRead[]
+> {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
+  }
+  const suffix = qs.toString() ? `?${qs.toString()}` : "";
+  return request<NoteRead[]>(`/notes${suffix}`);
+}
+
+export function createNote(payload: {
+  body: string;
+  title?: string;
+  target_kind?: string;
+  copy_id?: string;
+  track_position?: string;
+  pinned?: boolean;
+  tags?: string[];
+}): Promise<NoteRead> {
+  return request<NoteRead>("/notes", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function updateNote(id: string, patch: Record<string, unknown>): Promise<NoteRead> {
+  return request<NoteRead>(`/notes/${id}`, { method: "PATCH", body: JSON.stringify(patch) });
+}
+
+export function deleteNote(id: string): Promise<void> {
+  return fetch(`/api/notes/${id}`, { method: "DELETE" }).then(() => undefined);
+}
+
+// --- Plants ---
+export interface PlantRead {
+  code: string;
+  name: string;
+  city?: string | null;
+}
+export function getPlants(): Promise<PlantRead[]> {
+  return request<PlantRead[]>("/plants");
+}

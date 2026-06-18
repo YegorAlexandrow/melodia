@@ -8,9 +8,15 @@ from beanie import PydanticObjectId
 from fastapi import APIRouter, HTTPException, Query
 
 from ..models.catalog import Copy, CopyStatus
-from ..schemas import CopyCreate, CopyListItem, CopyRead
+from ..schemas import CopyCreate, CopyListItem, CopyRead, CopyUpdate, RatingCreate
 from ..services.collection import CopyFilters, enrich, facets, query_copies
-from ..services.copies import copy_position, create_copies, get_copy
+from ..services.copies import (
+    add_rating,
+    copy_position,
+    create_copies,
+    get_copy,
+    update_copy,
+)
 from ..services.discogs import DiscogsError
 from ..services.releases import get_cached_release
 from ..settings import get_settings
@@ -71,4 +77,24 @@ async def read_copy(copy_id: PydanticObjectId) -> CopyRead:
     copy = await get_copy(copy_id)
     if copy is None:
         raise HTTPException(404, "Экземпляр не найден")
+    return await _read(copy)
+
+
+@router.patch("/{copy_id}", response_model=CopyRead)
+async def patch_copy(copy_id: PydanticObjectId, body: CopyUpdate) -> CopyRead:
+    copy = await get_copy(copy_id)
+    if copy is None:
+        raise HTTPException(404, "Экземпляр не найден")
+    # только переданные поля; вложенные объекты — как pydantic-модели, не dict
+    changes = {f: getattr(body, f) for f in body.model_fields_set}
+    await update_copy(copy, changes)
+    return await _read(copy)
+
+
+@router.post("/{copy_id}/ratings", response_model=CopyRead)
+async def post_rating(copy_id: PydanticObjectId, body: RatingCreate) -> CopyRead:
+    copy = await get_copy(copy_id)
+    if copy is None:
+        raise HTTPException(404, "Экземпляр не найден")
+    await add_rating(copy, album=body.album, sound=body.sound, note=body.note)
     return await _read(copy)

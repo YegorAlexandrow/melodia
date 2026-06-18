@@ -17,10 +17,13 @@ from .models.catalog import (
     Grade,
     Identifier,
     MediaRead,
+    Note,
+    Plant,
     Pressing,
     RatingEntry,
     Release,
     SoundMode,
+    TargetKind,
     TimeStamp,
     Track,
     media_to_read,
@@ -222,3 +225,94 @@ class CopyRead(BaseModel):
             copy_total=total,
             release=ReleaseRead.from_doc(release) if release else None,
         )
+
+
+class CopyUpdate(BaseModel):
+    """Частичное обновление личных полей экземпляра (PATCH).
+
+    Передаются только изменяемые поля; вложенные объекты заменяются целиком.
+    """
+
+    status: Optional[CopyStatus] = None
+    is_favorite: Optional[bool] = None
+    storage_location: Optional[str] = None
+    tags: Optional[list[str]] = None
+    pressing: Optional[Pressing] = None
+    grade: Optional[Grade] = None
+    acquisition: Optional[Acquisition] = None
+
+
+class RatingCreate(BaseModel):
+    """Новая запись в историю оценок (музыка и/или звук)."""
+
+    album: Optional[int] = None
+    sound: Optional[int] = None
+    note: Optional[str] = None
+
+
+# --------------------------------------------------------------------------- #
+#  Заметки
+# --------------------------------------------------------------------------- #
+class NoteCreate(BaseModel):
+    body: str
+    title: Optional[str] = None
+    target_kind: TargetKind = TargetKind.COPY
+    copy_id: Optional[str] = None
+    target_release_id: Optional[int] = None
+    track_position: Optional[str] = None
+    pinned: bool = False
+    tags: list[str] = []
+
+
+class NoteUpdate(BaseModel):
+    body: Optional[str] = None
+    title: Optional[str] = None
+    pinned: Optional[bool] = None
+    tags: Optional[list[str]] = None
+
+
+class NoteRead(BaseModel):
+    id: str
+    body: str
+    title: Optional[str] = None
+    target_kind: TargetKind
+    copy_id: Optional[str] = None
+    target_release_id: Optional[int] = None
+    track_position: Optional[str] = None
+    pinned: bool = False
+    tags: list[str] = []
+    created_at: TimeStamp
+    updated_at: TimeStamp
+
+    @classmethod
+    def from_doc(cls, n: Note) -> "NoteRead":
+        copy_id = None
+        if n.target_copy is not None:
+            ref = getattr(n.target_copy, "ref", None)
+            copy_id = str(ref.id) if ref is not None else None
+        return cls(
+            id=str(n.id),
+            body=n.body,
+            title=n.title,
+            target_kind=n.target_kind,
+            copy_id=copy_id,
+            target_release_id=n.target_release_id,
+            track_position=n.track_position,
+            pinned=n.pinned,
+            tags=n.tags,
+            created_at=n.created_at,
+            updated_at=n.updated_at,
+        )
+
+
+# --------------------------------------------------------------------------- #
+#  Справочник заводов
+# --------------------------------------------------------------------------- #
+class PlantRead(BaseModel):
+    code: str
+    name: str
+    city: Optional[str] = None
+
+    @classmethod
+    def from_doc(cls, p: Plant) -> "PlantRead":
+        return cls(code=p.code, name=p.name, city=p.city)
