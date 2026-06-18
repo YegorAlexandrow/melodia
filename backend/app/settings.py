@@ -22,13 +22,20 @@ class Settings(BaseSettings):
     mongo_url: str = "mongodb://localhost:27017"
     db_name: str = "vinyl"
 
-    # --- Медиа (базовые URL для сборки публичных ссылок на обложки/аудио) ---
+    # --- Медиа ---
+    # Физическая папка для локального хранения обложек/аудио (loc=LOCAL).
+    media_dir: str = "./media"
+    # Базовые URL для сборки публичных ссылок. media_local_base_url по умолчанию
+    # указывает на наш эндпоинт отдачи файлов.
     media_s3_base_url: str = ""
-    media_local_base_url: str = ""
+    media_local_base_url: str = "/api/media/"
 
-    # --- Discogs (используется на следующем шаге; здесь только конфиг) ---
+    # --- Discogs ---
+    # Токен опционален: без него работает анонимно (приемлемые лимиты), с ним —
+    # выше лимит и доступны обложки. User-Agent обязателен всегда.
     discogs_token: str = ""
     discogs_user_agent: str = "MelodiaCatalog/0.1 (+self-hosted)"
+    discogs_base_url: str = "https://api.discogs.com"
 
     # --- CORS: источники фронтенда ---
     cors_origins: list[str] = [

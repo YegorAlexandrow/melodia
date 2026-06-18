@@ -12,6 +12,7 @@ from collections.abc import AsyncIterator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .api.discogs import router as discogs_router
 from .api.health import router as health_router
 from .db import close_db, init_db
 from .settings import get_settings
@@ -44,6 +45,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(health_router)
+    app.include_router(discogs_router)
     return app
 
 
