@@ -19,6 +19,7 @@ from .models.catalog import (
     Identifier,
     MediaRead,
     Note,
+    PlayEvent,
     Plant,
     Pressing,
     RatingEntry,
@@ -303,6 +304,43 @@ class NoteRead(BaseModel):
             tags=n.tags,
             created_at=n.created_at,
             updated_at=n.updated_at,
+        )
+
+
+class NoteFeedItem(NoteRead):
+    """Заметка в сквозной ленте (экран D) — с привязкой к экземпляру."""
+
+    copy_title: Optional[str] = None
+    copy_artist: Optional[str] = None
+
+
+# --------------------------------------------------------------------------- #
+#  Прослушивания
+# --------------------------------------------------------------------------- #
+class PlayCreate(BaseModel):
+    side_played: Optional[str] = None
+    full_play: bool = True
+    equipment: Optional[str] = None
+    note: Optional[str] = None
+
+
+class PlayRead(BaseModel):
+    id: str
+    played_at: TimeStamp
+    side_played: Optional[str] = None
+    full_play: bool = True
+    equipment: Optional[str] = None
+    note: Optional[str] = None
+
+    @classmethod
+    def from_doc(cls, e: "PlayEvent") -> "PlayRead":
+        return cls(
+            id=str(e.id),
+            played_at=e.played_at,
+            side_played=e.side_played,
+            full_play=e.full_play,
+            equipment=e.equipment,
+            note=e.note,
         )
 
 

@@ -1,43 +1,8 @@
-// Экраны A, D, E, F — пока заглушки (реализуются на следующих этапах).
-// B (Добавить) и C (Карточка) — в отдельных модулях.
+// Все экраны реализованы в отдельных модулях; здесь — единая точка реэкспорта.
 
 export { AddScreen } from "./AddScreen";
 export { CardScreen } from "./CardScreen";
 export { CollectionScreen } from "./CollectionScreen";
 export { AudioScreen } from "./AudioScreen";
-
-interface StubProps {
-  overline: string;
-  title: string;
-  note: string;
-}
-
-function ScreenStub({ overline, title, note }: StubProps) {
-  return (
-    <div className="page">
-      <div className="overline">{overline}</div>
-      <h1>{title}</h1>
-      <p className="lead">{note}</p>
-    </div>
-  );
-}
-
-export function NotesScreen() {
-  return (
-    <ScreenStub
-      overline="Сквозная лента"
-      title="Заметки"
-      note="Экран D. Все заметки коллекции по дате. Скоро."
-    />
-  );
-}
-
-export function StatsScreen() {
-  return (
-    <ScreenStub
-      overline="Сводка"
-      title="Статистика"
-      note="Экран F. Дашборд: по заводам, жанрам, давно не слушал. Скоро."
-    />
-  );
-}
+export { NotesScreen } from "./NotesScreen";
+export { StatsScreen } from "./StatsScreen";

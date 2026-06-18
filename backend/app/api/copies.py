@@ -8,7 +8,15 @@ from beanie import PydanticObjectId
 from fastapi import APIRouter, HTTPException, Query
 
 from ..models.catalog import Copy, CopyStatus
-from ..schemas import CopyCreate, CopyListItem, CopyRead, CopyUpdate, RatingCreate
+from ..schemas import (
+    CopyCreate,
+    CopyListItem,
+    CopyRead,
+    CopyUpdate,
+    PlayCreate,
+    PlayRead,
+    RatingCreate,
+)
 from ..services.collection import CopyFilters, enrich, facets, query_copies
 from ..services.copies import (
     add_rating,
@@ -18,6 +26,7 @@ from ..services.copies import (
     update_copy,
 )
 from ..services.discogs import DiscogsError
+from ..services.plays import add_play_event, list_play_events
 from ..services.releases import get_cached_release
 from ..settings import get_settings
 
@@ -98,3 +107,24 @@ async def post_rating(copy_id: PydanticObjectId, body: RatingCreate) -> CopyRead
         raise HTTPException(404, "Экземпляр не найден")
     await add_rating(copy, album=body.album, sound=body.sound, note=body.note)
     return await _read(copy)
+
+
+@router.post("/{copy_id}/plays", response_model=PlayRead)
+async def post_play(copy_id: PydanticObjectId, body: PlayCreate) -> PlayRead:
+    copy = await get_copy(copy_id)
+    if copy is None:
+        raise HTTPException(404, "Экземпляр не найден")
+    event = await add_play_event(
+        copy,
+        side_played=body.side_played,
+        full_play=body.full_play,
+        equipment=body.equipment,
+        note=body.note,
+    )
+    return PlayRead.from_doc(event)
+
+
+@router.get("/{copy_id}/plays", response_model=list[PlayRead])
+async def get_plays(copy_id: PydanticObjectId) -> list[PlayRead]:
+    events = await list_play_events(copy_id)
+    return [PlayRead.from_doc(e) for e in events]

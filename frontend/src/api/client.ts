@@ -206,6 +206,58 @@ export function deleteAudio(id: string): Promise<void> {
   return fetch(`/api/audio/${id}`, { method: "DELETE" }).then(() => undefined);
 }
 
+// --- Plays ---
+export interface PlayRead {
+  id: string;
+  played_at: number;
+  side_played?: string | null;
+  full_play: boolean;
+  equipment?: string | null;
+  note?: string | null;
+}
+export function listPlays(copyId: string): Promise<PlayRead[]> {
+  return request<PlayRead[]>(`/copies/${copyId}/plays`);
+}
+export function addPlay(
+  copyId: string,
+  payload: { side_played?: string; full_play?: boolean; equipment?: string; note?: string },
+): Promise<PlayRead> {
+  return request<PlayRead>(`/copies/${copyId}/plays`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+// --- Notes feed (экран D) ---
+export interface NoteFeedItem extends NoteRead {
+  copy_title?: string | null;
+  copy_artist?: string | null;
+}
+export function notesFeed(params: { pinned?: boolean; q?: string; genre?: string } = {}): Promise<
+  NoteFeedItem[]
+> {
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null && v !== "") qs.set(k, String(v));
+  }
+  const suffix = qs.toString() ? `?${qs.toString()}` : "";
+  return request<NoteFeedItem[]>(`/notes/feed${suffix}`);
+}
+
+// --- Stats (экран F) ---
+export interface Stats {
+  total: number;
+  owned: number;
+  wanted: number;
+  with_audio: number;
+  by_plant: { code: string; name: string; count: number }[];
+  by_genre: { genre: string; count: number }[];
+  long_unplayed: { id: string; title?: string | null; artist?: string | null; last_played_at?: number | null }[];
+}
+export function getStats(): Promise<Stats> {
+  return request<Stats>("/stats");
+}
+
 // --- Plants ---
 export interface PlantRead {
   code: string;

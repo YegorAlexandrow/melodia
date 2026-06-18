@@ -10,9 +10,12 @@ import {
   deleteNote,
   listAudio,
   deleteAudio,
+  listPlays,
+  addPlay,
   getPlants,
   type NoteRead,
   type AudioRead,
+  type PlayRead,
   type PlantRead,
 } from "../../api/client";
 import { Button, Label, Select, Text, TextArea } from "../../components/form";
@@ -396,6 +399,90 @@ const linkBtn = {
   fontSize: 11,
   color: "var(--muted)",
 } as const;
+
+// --- Журнал прослушиваний ---
+export function PlaysPanel({ copy, reload }: PanelProps) {
+  const [events, setEvents] = useState<PlayRead[]>([]);
+  const [side, setSide] = useState("");
+  const [equipment, setEquipment] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const sides = (() => {
+    const s = new Set<string>();
+    copy.release?.tracklist.forEach((t) => t.side && s.add(t.side));
+    return [...s];
+  })();
+
+  function load() {
+    listPlays(copy.id).then(setEvents).catch(() => {});
+  }
+  useEffect(load, [copy.id]);
+
+  async function mark() {
+    setSaving(true);
+    await addPlay(copy.id, {
+      side_played: side || undefined,
+      full_play: !side,
+      equipment: equipment || undefined,
+    });
+    setSaving(false);
+    setSide("");
+    setEquipment("");
+    load();
+    reload(); // обновить счётчики в шапке
+  }
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}>
+        <div style={{ width: 130 }}>
+          <Label>Что слушал</Label>
+          <Select
+            value={side}
+            onChange={setSide}
+            options={[{ value: "", label: "весь диск" }, ...sides.map((s) => ({ value: s, label: `сторона ${s}` }))]}
+          />
+        </div>
+        <div style={{ flex: 1, minWidth: 160 }}>
+          <Label>На чём</Label>
+          <Text value={equipment} onChange={setEquipment} placeholder="Technics SL-1200" />
+        </div>
+        <Button variant="blue" onClick={mark} disabled={saving}>
+          Отметить
+        </Button>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        {events.length === 0 && (
+          <div style={{ fontStyle: "italic", color: "var(--muted)", fontFamily: "var(--font-display)" }}>
+            Прослушиваний пока нет
+          </div>
+        )}
+        {events.map((e) => (
+          <div
+            key={e.id}
+            style={{ display: "flex", gap: 14, alignItems: "baseline", padding: "6px 0", borderBottom: "1px solid var(--hair)" }}
+          >
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--red)", width: 110 }}>
+              {formatEpoch(e.played_at)}
+            </span>
+            <span style={{ flex: 1, fontSize: 14, color: "var(--ink-soft)" }}>
+              {e.side_played ? `сторона ${e.side_played}` : "весь диск"}
+            </span>
+            {e.equipment && (
+              <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--faint)" }}>{e.equipment}</span>
+            )}
+          </div>
+        ))}
+        {events.length > 0 && (
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted)", marginTop: 8 }}>
+            всего прослушиваний: {copy.play_count}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // --- Аудио экземпляра (ссылка/скачивание, без плеера) ---
 export function AudioPanel({ copy }: { copy: CopyRead }) {
