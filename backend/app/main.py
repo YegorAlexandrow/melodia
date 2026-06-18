@@ -13,6 +13,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from .api.audio import router as audio_router
 from .api.copies import router as copies_router
 from .api.discogs import router as discogs_router
 from .api.health import router as health_router
@@ -54,6 +55,7 @@ def create_app() -> FastAPI:
     app.include_router(copies_router)
     app.include_router(notes_router)
     app.include_router(plants_router)
+    app.include_router(audio_router)
 
     # Отдача локальных медиа (обложки/аудио). URL собирается build_media_url
     # из media_local_base_url (по умолчанию "/api/media/").

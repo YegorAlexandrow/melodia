@@ -166,6 +166,46 @@ export function deleteNote(id: string): Promise<void> {
   return fetch(`/api/notes/${id}`, { method: "DELETE" }).then(() => undefined);
 }
 
+// --- Audio ---
+export interface AudioRead {
+  id: string;
+  title?: string | null;
+  source: string;
+  role?: string | null;
+  track_position?: string | null;
+  side?: string | null;
+  file_format?: string | null;
+  sample_rate?: number | null;
+  bit_depth?: number | null;
+  channels?: number | null;
+  duration_sec?: number | null;
+  url: string;
+  created_at: number;
+}
+
+export function listAudio(copyId: string): Promise<AudioRead[]> {
+  return request<AudioRead[]>(`/audio?copy_id=${encodeURIComponent(copyId)}`);
+}
+
+export async function createAudio(form: FormData): Promise<AudioRead> {
+  // multipart — Content-Type выставляет браузер сам (с boundary)
+  const res = await fetch("/api/audio", { method: "POST", body: form });
+  if (!res.ok) {
+    let detail = `${res.status}`;
+    try {
+      detail = (await res.json())?.detail ?? detail;
+    } catch {
+      /* ignore */
+    }
+    throw new ApiError(detail, res.status);
+  }
+  return (await res.json()) as AudioRead;
+}
+
+export function deleteAudio(id: string): Promise<void> {
+  return fetch(`/api/audio/${id}`, { method: "DELETE" }).then(() => undefined);
+}
+
 // --- Plants ---
 export interface PlantRead {
   code: string;

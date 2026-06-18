@@ -12,6 +12,7 @@ from pydantic import BaseModel
 
 from .models.catalog import (
     Acquisition,
+    AudioFile,
     Copy,
     CopyStatus,
     Grade,
@@ -316,3 +317,42 @@ class PlantRead(BaseModel):
     @classmethod
     def from_doc(cls, p: Plant) -> "PlantRead":
         return cls(code=p.code, name=p.name, city=p.city)
+
+
+# --------------------------------------------------------------------------- #
+#  Аудио
+# --------------------------------------------------------------------------- #
+class AudioRead(BaseModel):
+    id: str
+    title: Optional[str] = None
+    source: str
+    role: Optional[str] = None
+    track_position: Optional[str] = None
+    side: Optional[str] = None
+    file_format: Optional[str] = None
+    sample_rate: Optional[int] = None
+    bit_depth: Optional[int] = None
+    channels: Optional[int] = None
+    duration_sec: Optional[float] = None
+    url: str = ""
+    created_at: TimeStamp
+
+    @classmethod
+    def from_doc(cls, a: "AudioFile") -> "AudioRead":
+        target = a.targets[0] if a.targets else None
+        read = media_to_read(a.media)
+        return cls(
+            id=str(a.id),
+            title=a.title,
+            source=a.source.value,
+            role=target.role.value if target else None,
+            track_position=target.track_position if target else None,
+            side=target.side if target else None,
+            file_format=a.file_format,
+            sample_rate=a.sample_rate,
+            bit_depth=a.bit_depth,
+            channels=a.channels,
+            duration_sec=a.duration_sec,
+            url=read.url if read else "",
+            created_at=a.created_at,
+        )

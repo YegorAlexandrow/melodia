@@ -6,7 +6,7 @@ import { Cover } from "../components/Cover";
 import { StatusBadge } from "../components/StatusBadge";
 import { Accordion } from "../components/Accordion";
 import { soundModeLabel, STATUSES } from "../lib/ui";
-import { AcquisitionPanel, NotesPanel, PressPanel, RatingsPanel } from "./card/editors";
+import { AcquisitionPanel, AudioPanel, NotesPanel, PressPanel, RatingsPanel } from "./card/editors";
 
 function groupBySide(tracks: Track[]): [string, Track[]][] {
   const map = new Map<string, Track[]>();
@@ -202,6 +202,10 @@ export function CardScreen() {
                     ))}
                   </div>
                 ))}
+            </Accordion>
+
+            <Accordion title="Аудио">
+              <AudioPanel copy={c} />
             </Accordion>
 
             <Accordion title="История оценок" defaultOpen={false}>

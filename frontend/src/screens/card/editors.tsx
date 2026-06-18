@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import type { CopyRead } from "../../types";
 import {
   updateCopy,
@@ -7,8 +8,11 @@ import {
   createNote,
   updateNote,
   deleteNote,
+  listAudio,
+  deleteAudio,
   getPlants,
   type NoteRead,
+  type AudioRead,
   type PlantRead,
 } from "../../api/client";
 import { Button, Label, Select, Text, TextArea } from "../../components/form";
@@ -392,3 +396,104 @@ const linkBtn = {
   fontSize: 11,
   color: "var(--muted)",
 } as const;
+
+// --- Аудио экземпляра (ссылка/скачивание, без плеера) ---
+export function AudioPanel({ copy }: { copy: CopyRead }) {
+  const [items, setItems] = useState<AudioRead[]>([]);
+
+  function load() {
+    listAudio(copy.id).then(setItems).catch(() => {});
+  }
+  useEffect(load, [copy.id]);
+
+  async function remove(a: AudioRead) {
+    await deleteAudio(a.id);
+    load();
+  }
+
+  const roleLabel: Record<string, string> = {
+    track: "трек",
+    full_side: "сторона",
+    full_album: "весь диск",
+    reference: "референс",
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 12 }}>
+        <Link
+          to={`/copy/${copy.id}/audio`}
+          style={{
+            fontFamily: "var(--font-mono)",
+            fontSize: 11,
+            color: "var(--blue)",
+            border: "1px solid var(--line)",
+            borderRadius: 2,
+            padding: "5px 11px",
+          }}
+        >
+          + добавить аудио
+        </Link>
+      </div>
+      {items.length === 0 && (
+        <div style={{ fontStyle: "italic", color: "var(--muted)", fontFamily: "var(--font-display)" }}>
+          Оцифровок пока нет
+        </div>
+      )}
+      {items.map((a) => {
+        const ref = a.role === "reference";
+        const meta = ref
+          ? "внешняя ссылка"
+          : [a.file_format?.toUpperCase(), a.sample_rate && `${a.sample_rate / 1000} kHz`, a.bit_depth && `${a.bit_depth} bit`]
+              .filter(Boolean)
+              .join(" · ") || "файл";
+        return (
+          <div
+            key={a.id}
+            style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 0", borderBottom: "1px solid var(--hair)" }}
+          >
+            <a
+              href={a.url}
+              target="_blank"
+              rel="noreferrer"
+              title={ref ? "открыть ссылку" : "открыть / скачать"}
+              style={{
+                width: 40,
+                height: 40,
+                flex: "none",
+                borderRadius: "50%",
+                background: ref ? "var(--gold)" : "var(--red)",
+                color: "#f3ecdd",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textDecoration: "none",
+              }}
+            >
+              ▶
+            </a>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: 19, fontWeight: 600 }}>
+                {a.title || "Без названия"}
+              </div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--muted)" }}>{meta}</div>
+            </div>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 10,
+                textTransform: "uppercase",
+                color: ref ? "var(--gold)" : "var(--green)",
+              }}
+            >
+              {a.source === "needledrop" ? "needledrop" : roleLabel[a.role ?? ""] ?? a.source}
+            </span>
+            <button onClick={() => remove(a)} style={{ ...linkBtn, color: "var(--red)" }}>
+              удалить
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}

@@ -4,6 +4,7 @@
 export { AddScreen } from "./AddScreen";
 export { CardScreen } from "./CardScreen";
 export { CollectionScreen } from "./CollectionScreen";
+export { AudioScreen } from "./AudioScreen";
 
 interface StubProps {
   overline: string;
@@ -27,16 +28,6 @@ export function NotesScreen() {
       overline="Сквозная лента"
       title="Заметки"
       note="Экран D. Все заметки коллекции по дате. Скоро."
-    />
-  );
-}
-
-export function AudioScreen() {
-  return (
-    <ScreenStub
-      overline="Оцифровки"
-      title="Привязать аудио"
-      note="Экран E. Привязка записи к треку / стороне / диску / референсу. Скоро."
     />
   );
 }
